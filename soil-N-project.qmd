@@ -1,0 +1,14 @@
+---
+title: "Soil nitrogen project"
+author: "Nina Preußler"
+format: html
+editor: visual
+---
+
+
+# AI documentation
+
+## Preparation phase
+- get an overview of possible research directions 
+- refine search terms
+
