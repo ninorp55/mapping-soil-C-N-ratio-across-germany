@@ -8,18 +8,21 @@ editor: visual
 # Introduction
 
 ### Why is C:N important?
-- What does it tell you about the soil?
+
+-   What does it tell you about the soil?
 
 ### How is C:N changing?
-- What processes and factors affect it?
-- EU/Germany trends
+
+-   What processes and factors affect it?
+-   EU/Germany trends
 
 ### DSM
-- existing maps for EU/Germany
-  - method
-  - data
-  - quality
-  - challenges
+
+-   existing maps for EU/Germany
+    -   method
+    -   data
+    -   quality
+    -   challenges
 
 # Methods
 
@@ -61,7 +64,7 @@ lucas_eu <- st_read('LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.shp')
 lucas_data <- read.csv('LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.csv')
 
 # merge
-lucas_eu <- lucas_eu %>% 
+lucas_eu <- lucas_eu %>%
   inner_join(lucas_data, by = join_by(POINTID))
 
 # subset to Germany
@@ -72,7 +75,6 @@ plot(lucas$N)
 
 ```
 
-
 calculated with $\frac{\text{total N}}{\text{organic C}}$
 
 ```{r}
@@ -80,7 +82,7 @@ lucas <- lucas %>%
   # first make columns numeric, then add new column with ratio
   mutate(N = if_else(N == "< LOD", 0, as.numeric(N)),
          OC = if_else(OC == "< LOD", 0, as.numeric(OC)),
-         cn_ratio = OC / N) 
+         cn_ratio = OC / N)
 
 ggplot(lucas, aes(cn_ratio)) +
   geom_histogram(binwidth = 0.5)
@@ -93,8 +95,8 @@ tm_basemap('Esri.WorldImagery') +
   tm_shape(germany) +
   tm_lines(col="black", lwd = 3) +
   tm_shape(lucas) +
-  tm_dots(fill="cn_ratio", 
-          size = 0.5,   
+  tm_dots(fill="cn_ratio",
+          size = 0.5,
           fill.scale = tm_scale_continuous(values = "cividis",
                                            limits = c(0, 20)))
 ```
@@ -107,7 +109,6 @@ library(spatstat)
 #nncross(lucas, lucas)
 ```
 
-
 ### Microbial biomass
 
 ```{r}
@@ -116,7 +117,7 @@ setwd('~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data/GEB_maps')
 microb <- rast('Cmic_gen_annual_mean_t.tif')
 microb_eu <- read_stars('Cmic_gen_annual_mean_t.tif')
 
-# subset to 
+# subset to
 #microb <- st_filter(microb_eu, germany)
 
 plot(microb_eu)
