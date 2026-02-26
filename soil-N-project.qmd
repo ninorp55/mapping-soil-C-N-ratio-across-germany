@@ -55,6 +55,7 @@ How does spatial prediction of soil C:N stoichiometry across Germany differ when
 
 library(glcm)
 library(raster) # required for dissimilarity
+library(randomForest)
 library(sf)
 library(gstat)
 library(terra)
@@ -279,23 +280,10 @@ dissim_rast <- glcm(
 # convert back to terra
 lc_dissim <- rast(dissim_rast)
 
-```
-
-```{r lc-dissimilarity-2}
-
-# dissimilarity (from ChatGPT)
-dissim_rast2 <- glcm(
-  land_cover_rast,
-  window = c(5,5), # take only the 8 pixels forming the square directly around current pixel
-  #shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
-  statistics = "dissimilarity"
-)
-
-# convert back to terra
-lc_dissim2 <- rast(dissim_rast2)
-plot(lc_dissim2)
+plot(lc_dissim)
 
 ```
+
 
 ### Clay and silt content
 
@@ -327,7 +315,80 @@ microb_eu <- read_stars('Cmic_gen_annual_mean_t.tif')
 plot(microb_eu)
 ```
 
+
 ## Random Forest model
+
+```{r prepare-raster-stack}
+
+# same CRS and aligned
+
+# stack
+predictor_stack <- c()
+
+```
+
+```{r split-train-test}
+
+set.seed(123)
+
+# extract data for each point from raster stack
+predictor_values <- terra::extract(predictor_stack, data)[,-1] # remove ID
+
+# add extracted values to C:N ratio data
+data <- cbind(lucas[c('Point_ID', 'cn_ratio')], predictor_values) %>% 
+  na.omit() # remove rows with missing data
+
+# randomly select points by proportion
+train_data <- data %>%
+  slice_sample(prop = 0.7)
+
+# use remaining rows for test
+test_data <- data %>%
+  anti_join(train_data, by='Point_ID') %>%
+  select(!Point_ID)
+
+```
+
+```{r train-random-forest-model}
+
+set.seed(123)
+
+# remove Point_ID
+train_data <- select(train_data, !Point_ID)
+
+# train model
+rf_model <- randomForest(
+  cn_ratio ~ .,      # C:N as function of all other columns (predictors)
+  data = train_data,
+  ntree = 500,       # number of trees
+  importance = TRUE  # calculate variable importance scores
+)
+
+```
+
+```{r test-model}
+
+train_pred_prob <- predict(
+  rf_model,
+  newdata = train_data,
+  type   = "prob"
+)[, 2]   # 2nd column = class "1"
+
+```
+
+```{r spatial-prediction}
+
+cn_map <- terra::predict(
+  object = predictor_stack, # what to predict from
+  model  = rf_model,
+  type   = "prob", # ???
+  index  = 2 # ???
+)
+
+names(pred_current) <- c("Mean predicted C:N ratio")
+
+```
+
 
 ## Model evaluation
 
@@ -335,6 +396,11 @@ plot(microb_eu)
 -   concordance correlation coefficient (CCC)
 -   root mean squared error (RMSE)
 -   Bias
+
+```{r calculate-accuracy-measures}
+
+
+```
 
 ### Uncertainty map
 
