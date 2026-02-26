@@ -56,6 +56,7 @@ How does spatial prediction of soil C:N stoichiometry across Germany differ when
 library(glcm)
 library(raster) # required for dissimilarity
 library(sf)
+library(gstat)
 library(terra)
 library(tmap)
 library(stars)
@@ -260,6 +261,8 @@ maybe try if adding LC type would increase accuracy?
 land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
 land_cover <- crop(land_cover_global, germany)
 
+plot(land_cover, col=map.pal('viridis',200))
+
 # transform to RasterLayer (from raster package) - required for glcm
 land_cover_rast <- raster(land_cover)
 
@@ -341,7 +344,26 @@ plot(microb_eu)
 
 ## Exploratory data analysis
 
-### Spatial autocorrelation of C:N
+### C:N ratio
+
+#### Spatial autocorrelation
+
+```{r c-n-experimental-variogram}
+
+# use projection (in m)
+lucas_proj <- st_transform(lucas, 'EPSG:25832')
+
+# make gstat object
+gstat_cn <- gstat(formula = cn_ratio ~ 1, data = lucas_proj)
+
+vg_cn <- variogram(gstat_cn, cloud=F, boundaries=seq(3000, 30000, 3000))
+plot(vg_cn, plot.nu = TRUE)
+
+vg_cn <- variogram(gstat_cn, cloud=F, boundaries=seq(2000, 10000, 2000))
+plot(vg_cn, plot.nu = TRUE)
+
+```
+--> spatial autocorrelation only to distance of ~7.5km and only small fraction of points have other points within this distance (especially when trying variogram with smaller cloud classes), so geostatistical approaches such as kriging not ideal
 
 ## Evalutation
 
