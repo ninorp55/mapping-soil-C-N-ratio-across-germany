@@ -7,16 +7,16 @@ editor: visual
 
 # Introduction
 
-### Why is C:N important?
+## Why is C:N important?
 
 -   What does it tell you about the soil?
 
-### How is C:N changing?
+## How is C:N changing?
 
 -   What processes and factors affect it?
 -   EU/Germany trends
 
-### DSM
+## Why DSM?
 
 -   existing maps for EU/Germany
     -   method
@@ -34,6 +34,8 @@ library(tmap)
 library(ggplot2)
 library(stars)
 library(tidyverse)
+library(devtools)
+library(geodata)
 
 ```
 
@@ -42,6 +44,8 @@ library(tidyverse)
 ```{r load-germany-mask}
 
 library(rnaturalearth)
+library(devtools)
+devtools::install_github("ropensci/rnaturalearthhires", quiet = TRUE)
 
 # get Germany boundary polygon
 germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
@@ -50,9 +54,9 @@ germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
 
 ## Data
 
-### C:N ratio
+## LUCAS soil survey
 
-obtained from LUCAS topsoil survey 2018
+LUCAS topsoil survey 2018
 
 ```{r load-lucas-data}
 setwd('~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data')
@@ -71,21 +75,38 @@ lucas_eu <- lucas_eu %>%
 lucas <- st_filter(lucas_eu, germany)
 
 lucas %>% glimpse()
-plot(lucas$N)
-
+plot(lucas["N"])
 ```
+
+### C:N ratio
 
 calculated with $\frac{\text{total N}}{\text{organic C}}$
 
-```{r}
+```{r calculate-cn-ratio}
+
+# first make columns numeric, then add new column with ratio
 lucas <- lucas %>%
-  # first make columns numeric, then add new column with ratio
   mutate(N = if_else(N == "< LOD", 0, as.numeric(N)),
          OC = if_else(OC == "< LOD", 0, as.numeric(OC)),
          cn_ratio = OC / N)
 
 ggplot(lucas, aes(cn_ratio)) +
   geom_histogram(binwidth = 0.5)
+```
+
+```{r remove-nans-and-outliers}
+
+# copy before cleaning
+lucas_init <- lucas
+
+lucas <- lucas %>%
+  drop_na(cn_ratio)
+
+cn_iqr <- IQR(lucas$cn_ratio)
+cn_mean <- mean(lucas$cn_ratio)
+cn_median <- median(lucas$cn_ratio)
+cn_sd <- sd(lucas$cn_ratio)
+
 ```
 
 ```{r plot-lucas-points-germany}
@@ -101,17 +122,118 @@ tm_basemap('Esri.WorldImagery') +
                                            limits = c(0, 20)))
 ```
 
-##### Distance between sampling points
+#### Distance between sampling points
 
 ```{r}
 library(spatstat)
 
-#nncross(lucas, lucas)
+# prepare point pattern with projection (required for distance)
+lucas_ppp <- lucas %>%
+  st_transform('EPSG:25832') %>%
+  as.ppp()
+
+# find distance to nearest neighbor for each point
+nncross(lucas_ppp, lucas_ppp, what='dist')
 ```
+
+## Covariates
+
+based on Khosravani et al. (2025)
+
+| Abbreviation | Full name | Unit | Source |
+|--------------|-----------|------|--------|
+|      ann_temp        |    Mean annual temperature       |      |        |
+|       ann_precip       |           |      |        |
+|     slope         |      Slope     |      |   https://zenodo.org/records/1447210     |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+|              |           |      |        |
+
+: Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
+
+
+### Temperature and precipitation
+
+- loaded from WorldClim (XXX)
+
+```{r load-worldclim-data}
+
+library(geodata)
+
+# WorldClim (temperature and precipitation)
+temp <- worldclim_country(country='germany', var='tavg', path='data/covariates/worldclim', res=0.5)
+precip <- worldclim_country(country='germany', var='prec', path='data/covariates/worldclim', res=0.5)
+
+temp_annual <- mean(temp) # mean annual temperature
+precip_annual <- sum(precip) # total annual precipitation
+
+```
+
+
+### Slope and aspect
+
+Used DEM from Hengl /  Yamazaki et al (https://zenodo.org/records/1447210).
+
+```{r load-dem}
+
+setwd('/Users/ninap/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data/covariates/elevation')
+
+dem_global <- rast('dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif')
+
+# crop to Germany
+dem <- crop(dem_global, germany)
+
+```
+
+```{r calculate-slope-and-aspect}
+
+# Calculate aspect (results in degrees by default)
+slope <- terrain(dem, v = "slope", unit = "degrees")
+
+# Calculate aspect (results in degrees by default)
+aspect <- terrain(dem, v = "aspect", unit = "degrees")
+
+```
+
+calculated slope and aspect in degrees using terra
+
+### Latitude
+
+extracted latitude from rasters
+```{r}
+rast_coords <- rast(list(lon = init(dem, "x"), lat = init(dem, "y")))
+plot(rast_coords)
+```
+
+```{r}
+latitude <- rast(list(latitude = init(dem, "y")))
+plot(latitude)
+```
+
+```{r}
+
+rast_coords <- rast(dem, nlyrs=2)
+names(rast_coords) <- c("lon", "lat")
+values(rast_coords) <- crds(dem)
+
+# Plot the X and Y coordinates as rasters
+plot(rast_coords)
+
+```
+
+
 
 ### Microbial biomass
 
-```{r}
+```{r load-microbial-biomass-data}
 setwd('~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data/GEB_maps')
 
 microb <- rast('Cmic_gen_annual_mean_t.tif')
@@ -123,9 +245,34 @@ microb_eu <- read_stars('Cmic_gen_annual_mean_t.tif')
 plot(microb_eu)
 ```
 
+## Random Forest model
+
+## Model evaluation
+
+-   coefficient of determination (R2)
+-   concordance correlation coefficient (CCC)
+-   root mean squared error (RMSE)
+-   Bias
+
+### Uncertainty map
+
 # Results
 
 ## Exploratory data analysis
+
+## Evalutation
+
+### Summary statistics of predicted C:N by land cover class
+
+# Discussion
+
+## Limitations
+
+- WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
+
+### Microbial
+
+------------------------------------------------------------------------
 
 # AI documentation
 
