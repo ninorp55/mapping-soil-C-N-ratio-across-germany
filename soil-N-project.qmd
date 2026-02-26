@@ -3,7 +3,15 @@ title: "Digital soil mapping of C:N ratio across Germany"
 author: "Nina Preußler"
 format: html
 editor: visual
+knitr:
+  opts_knit:
+    root.dir: "~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project"
 ---
+
+# Title
+
+Comparison of Random Forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany
+accuracy measures, spatial patterns, variable importance
 
 # Introduction
 
@@ -23,19 +31,40 @@ editor: visual
     -   data
     -   quality
     -   challenges
+    
+## Fragestellung
+
+- methodische Gap: keine Random Forest prediction in Deutschland
+
+Schlagwörter:
+- Random Forest
+- C:N ratio Stöchiometrie 
+- systematischer Vergleich
+  - accuracy (Genauigkeit?)
+  - spatial patterns (z.B. Boxplot nach land cover, elevation; visueller Eindruck, hotspots)
+  - Variablen (importance, partial dependence)
+
+How does spatial prediction of soil C:N stoichiometry across Germany differ when using a Random Forest model compared to a cubist approach? 
+
+"ökologischer Plausibilitätscheck"
+
 
 # Methods
 
-```{r load-packages}
+```{r load-packages, include=FALSE}
 
+library(glcm)
+library(raster) # required for dissimilarity
 library(sf)
 library(terra)
 library(tmap)
-library(ggplot2)
 library(stars)
-library(tidyverse)
 library(devtools)
 library(geodata)
+library(spatstat) # for computing distance between sampling points
+library(ggplot2)
+library(tidyverse)
+
 
 ```
 
@@ -50,6 +79,9 @@ devtools::install_github("ropensci/rnaturalearthhires", quiet = TRUE)
 # get Germany boundary polygon
 germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
   select(geometry)
+
+# get bounding box
+st_bbox(germany)
 ```
 
 ## Data
@@ -59,13 +91,12 @@ germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
 LUCAS topsoil survey 2018
 
 ```{r load-lucas-data}
-setwd('~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data')
 
 # load point data
-lucas_eu <- st_read('LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.shp')
+lucas_eu <- st_read('data/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.shp')
 
 # load attribute data
-lucas_data <- read.csv('LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.csv')
+lucas_data <- read.csv('data/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.csv')
 
 # merge
 lucas_eu <- lucas_eu %>%
@@ -125,7 +156,6 @@ tm_basemap('Esri.WorldImagery') +
 #### Distance between sampling points
 
 ```{r}
-library(spatstat)
 
 # prepare point pattern with projection (required for distance)
 lucas_ppp <- lucas %>%
@@ -133,7 +163,15 @@ lucas_ppp <- lucas %>%
   as.ppp()
 
 # find distance to nearest neighbor for each point
-nncross(lucas_ppp, lucas_ppp, what='dist')
+distances <- nndist(lucas_ppp)
+
+# summary statistics
+print(paste('Mean distance:', round(mean(distances)/1000,2), 'km'))
+print(paste('Median distance:', round(median(distances)/1000,2), 'km'))
+print(paste('Standard deviation distance:', round(sd(distances)/1000,2), 'km'))
+print(paste('Minimum distance:', round(min(distances)/1000,2), 'km'))
+print(paste('Maximum distance:', round(max(distances)/1000,2), 'km'))
+
 ```
 
 ## Covariates
@@ -141,32 +179,29 @@ nncross(lucas_ppp, lucas_ppp, what='dist')
 based on Khosravani et al. (2025)
 
 | Abbreviation | Full name | Unit | Source |
-|--------------|-----------|------|--------|
-|      ann_temp        |    Mean annual temperature       |      |        |
-|       ann_precip       |           |      |        |
-|     slope         |      Slope     |      |   https://zenodo.org/records/1447210     |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
-|              |           |      |        |
+|----|----|----|----|
+| ann_temp | Mean annual temperature |  |  |
+| ann_precip |  |  |  |
+| slope | Slope |  | https://zenodo.org/records/1447210 |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
 
 : Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
 
-
 ### Temperature and precipitation
 
-- loaded from WorldClim (XXX)
+-   loaded from WorldClim (XXX)
 
 ```{r load-worldclim-data}
-
-library(geodata)
 
 # WorldClim (temperature and precipitation)
 temp <- worldclim_country(country='germany', var='tavg', path='data/covariates/worldclim', res=0.5)
@@ -177,16 +212,14 @@ precip_annual <- sum(precip) # total annual precipitation
 
 ```
 
-
 ### Slope and aspect
 
-Used DEM from Hengl /  Yamazaki et al (https://zenodo.org/records/1447210).
+Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210).
 
 ```{r load-dem}
 
-setwd('/Users/ninap/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data/covariates/elevation')
-
-dem_global <- rast('dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif')
+# load raster
+dem_global <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif')
 
 # crop to Germany
 dem <- crop(dem_global, germany)
@@ -208,30 +241,74 @@ calculated slope and aspect in degrees using terra
 ### Latitude
 
 extracted latitude from rasters
-```{r}
-rast_coords <- rast(list(lon = init(dem, "x"), lat = init(dem, "y")))
-plot(rast_coords)
-```
 
 ```{r}
 latitude <- rast(list(latitude = init(dem, "y")))
 plot(latitude)
 ```
+### Land cover dissimilarity
 
-```{r}
+link in paper was not accessible
 
-rast_coords <- rast(dem, nlyrs=2)
-names(rast_coords) <- c("lon", "lat")
-values(rast_coords) <- crds(dem)
+instead https://zenodo.org/records/3939038
 
-# Plot the X and Y coordinates as rasters
-plot(rast_coords)
+but is dissimilarity really more "aussagekraeftig" than the categorical LC type?
+maybe try if adding LC type would increase accuracy?
+```{r lc-dissimilarity}
+
+# load land cover data and crop to Germany
+land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
+land_cover <- crop(land_cover_global, germany)
+
+# transform to RasterLayer (from raster package) - required for glcm
+land_cover_rast <- raster(land_cover)
+
+# dissimilarity (from ChatGPT)
+dissim_rast <- glcm(
+  land_cover_rast,
+  window = c(3,3), # take only the 8 pixels forming the square directly around current pixel
+  shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
+  statistics = "dissimilarity"
+)
+
+# convert back to terra
+lc_dissim <- rast(dissim_rast)
+
+```
+
+```{r lc-dissimilarity-2}
+
+# dissimilarity (from ChatGPT)
+dissim_rast2 <- glcm(
+  land_cover_rast,
+  window = c(5,5), # take only the 8 pixels forming the square directly around current pixel
+  #shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
+  statistics = "dissimilarity"
+)
+
+# convert back to terra
+lc_dissim2 <- rast(dissim_rast2)
+plot(lc_dissim2)
+
+```
+
+### Clay and silt content
+
+very poor documentation in paper!
+there it says from ISRIC
+
+eventually downloaded from SoilGrids (250m resolution)
+- clay content (g kg-1)
+
+```{r load-silt-and-clay}
 
 ```
 
 
 
-### Microbial biomass
+Clay content, soil pH, silt content, S_respiration, and SWC
+
+### Extra: Microbial biomass
 
 ```{r load-microbial-biomass-data}
 setwd('~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data/GEB_maps')
@@ -256,9 +333,15 @@ plot(microb_eu)
 
 ### Uncertainty map
 
+## Ecological plausibility
+
+- Natura 2000
+
 # Results
 
 ## Exploratory data analysis
+
+### Spatial autocorrelation of C:N
 
 ## Evalutation
 
@@ -268,7 +351,7 @@ plot(microb_eu)
 
 ## Limitations
 
-- WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
+-   WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
 
 ### Microbial
 
