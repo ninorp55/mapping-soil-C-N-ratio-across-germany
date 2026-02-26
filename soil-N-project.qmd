@@ -93,15 +93,8 @@ LUCAS topsoil survey 2018
 
 ```{r load-lucas-data}
 
-# load point data
-lucas_eu <- st_read('data/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.shp')
-
-# load attribute data
-lucas_data <- read.csv('data/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.csv')
-
-# merge
-lucas_eu <- lucas_eu %>%
-  inner_join(lucas_data, by = join_by(POINTID))
+# load LUCAS topsoil data
+lucas_eu <- st_read('data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp')
 
 # subset to Germany
 lucas <- st_filter(lucas_eu, germany)
@@ -123,7 +116,7 @@ lucas <- lucas %>%
          cn_ratio = OC / N)
 
 ggplot(lucas, aes(cn_ratio)) +
-  geom_histogram(binwidth = 0.5)
+  geom_histogram(binwidth = 0.5) 
 ```
 
 ```{r remove-nans-and-outliers}
@@ -131,15 +124,24 @@ ggplot(lucas, aes(cn_ratio)) +
 # copy before cleaning
 lucas_init <- lucas
 
-lucas <- lucas %>%
-  drop_na(cn_ratio)
-
-cn_iqr <- IQR(lucas$cn_ratio)
+# summary statistics
 cn_mean <- mean(lucas$cn_ratio)
 cn_median <- median(lucas$cn_ratio)
 cn_sd <- sd(lucas$cn_ratio)
 
+iqr <- IQR(lucas$cn_ratio)
+first_quantile <- quantile(lucas$cn_ratio)['25%']
+third_quantile <- quantile(lucas$cn_ratio)['75%']
+
+# remove nan and outliers (> IQR +- 1.5 * IQR)
+lucas <- lucas %>%
+  drop_na(cn_ratio) %>%
+  mutate(cn_ratio_no_outliers = between(cn_ratio, first_quantile-1.5*iqr, third_quantile+1.5*iqr))
+
+ggplot(lucas, aes(cn_ratio, fill=cn_ratio_no_outliers)) +
+  geom_histogram(binwidth = 0.5) 
 ```
+but doesn't really make sense because then we limit the prediction range of RF
 
 ```{r plot-lucas-points-germany}
 
