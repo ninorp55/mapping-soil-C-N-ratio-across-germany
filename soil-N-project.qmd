@@ -84,6 +84,10 @@ germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
 
 # get bounding box
 st_bbox(germany)
+
+# reproject to UTM 32N
+crs <- 'EPSG:25832'
+germany <- st_transform(germany, crs)
 ```
 
 ## Data
@@ -96,6 +100,9 @@ LUCAS topsoil survey 2018
 
 # load LUCAS topsoil data
 lucas_eu <- st_read('data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp')
+
+# reproject
+lucas_eu <- st_transform(lucas_eu, crs)
 
 # subset to Germany
 lucas <- st_filter(lucas_eu, germany)
@@ -137,9 +144,9 @@ third_quantile <- quantile(lucas$cn_ratio)['75%']
 # remove nan and outliers (> IQR +- 1.5 * IQR)
 lucas <- lucas %>%
   drop_na(cn_ratio) %>%
-  mutate(cn_ratio_no_outliers = between(cn_ratio, first_quantile-1.5*iqr, third_quantile+1.5*iqr))
+  mutate(cn_ratio_no_outlier = between(cn_ratio, first_quantile-1.5*iqr, third_quantile+1.5*iqr))
 
-ggplot(lucas, aes(cn_ratio, fill=cn_ratio_no_outliers)) +
+ggplot(lucas, aes(cn_ratio, fill=cn_ratio_no_outlier)) +
   geom_histogram(binwidth = 0.5) 
 ```
 but doesn't really make sense because then we limit the prediction range of RF
@@ -162,9 +169,7 @@ tm_basemap('Esri.WorldImagery') +
 ```{r}
 
 # prepare point pattern with projection (required for distance)
-lucas_ppp <- lucas %>%
-  st_transform('EPSG:25832') %>%
-  as.ppp()
+lucas_ppp <- as.ppp(lucas)
 
 # find distance to nearest neighbor for each point
 distances <- nndist(lucas_ppp)
@@ -201,21 +206,6 @@ based on Khosravani et al. (2025)
 
 : Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
 
-### Temperature and precipitation
-
--   loaded from WorldClim (XXX)
-
-```{r load-worldclim-data}
-
-# WorldClim (temperature and precipitation)
-temp <- worldclim_country(country='germany', var='tavg', path='data/covariates/worldclim', res=0.5)
-precip <- worldclim_country(country='germany', var='prec', path='data/covariates/worldclim', res=0.5)
-
-temp_annual <- mean(temp) # mean annual temperature
-precip_annual <- sum(precip) # total annual precipitation
-
-```
-
 ### Slope and aspect
 
 Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210).
@@ -232,15 +222,31 @@ dem <- crop(dem_global, germany)
 
 ```{r calculate-slope-and-aspect}
 
-# Calculate aspect (results in degrees by default)
+# calculate slope 
 slope <- terrain(dem, v = "slope", unit = "degrees")
 
-# Calculate aspect (results in degrees by default)
+# calculate aspect
 aspect <- terrain(dem, v = "aspect", unit = "degrees")
 
 ```
 
 calculated slope and aspect in degrees using terra
+
+### Temperature and precipitation
+
+-   loaded from WorldClim (XXX)
+
+```{r load-worldclim-data}
+
+# WorldClim (temperature and precipitation)
+temp <- worldclim_country(country='germany', var='tavg', path='data/covariates/worldclim', res=0.5)
+precip <- worldclim_country(country='germany', var='prec', path='data/covariates/worldclim', res=0.5)
+
+temp_annual <- mean(temp) # mean annual temperature
+precip_annual <- sum(precip) # total annual precipitation
+
+```
+
 
 ### Latitude
 
@@ -295,6 +301,22 @@ eventually downloaded from SoilGrids (250m resolution)
 
 ```{r load-silt-and-clay}
 
+# load and crop to Germany
+
+clay <- rast('data/covariates/clay_0-5.tif') #%>%
+  # crop(germany)
+silt <- rast('data/covariates/silt_0-5.tif') #%>%
+  # crop(germany)
+
+
+```
+
+### pH
+
+```{r load-ph}
+
+ph <- rast('data/covariates/ph_0-5.tif')
+
 ```
 
 
@@ -322,8 +344,21 @@ plot(microb_eu)
 
 # same CRS and aligned
 
-# stack
-predictor_stack <- c()
+# set slope raster as template to align all other rasters with (because it has target resolution 250m)
+slope <-  project(slope, crs, method='bilinear') 
+
+# add to stack
+predictor_stack <- c(slope)
+
+# realign all remaining raster layers
+predictors <- list(aspect, temp, precip, latitude, lc_dissim, clay, silt, ph)
+for (predictor in predictors) {
+  predictor <- project(predictor, slope, method="bilinear")
+  predictor_stack <- append(predictor_stack, predictor)
+}
+
+# mask with Germany (extract exact shape)
+predictor_stack <- mask(predictor_stack, germany)
 
 ```
 
