@@ -3,7 +3,6 @@
 .RData
 .Ruserdata
 data/
-*.html
 soil-N-project_files/
 .DS_Store
 .Rprofile
