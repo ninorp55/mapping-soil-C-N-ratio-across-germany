@@ -175,6 +175,7 @@ lucas_ppp <- as.ppp(lucas)
 distances <- nndist(lucas_ppp)
 
 # summary statistics
+print(paste('Total number of points:', length(lucas$cn_ratio)))
 print(paste('Mean distance:', round(mean(distances)/1000,2), 'km'))
 print(paste('Median distance:', round(median(distances)/1000,2), 'km'))
 print(paste('Standard deviation distance:', round(sd(distances)/1000,2), 'km'))
@@ -252,9 +253,8 @@ precip_annual <- sum(precip) # total annual precipitation
 
 extracted latitude from rasters
 
-```{r}
+```{r extract-latitude}
 latitude <- rast(list(latitude = init(dem, "y")))
-plot(latitude)
 ```
 ### Land cover dissimilarity
 
@@ -319,9 +319,25 @@ ph <- rast('data/covariates/ph_0-5.tif')
 
 ```
 
+### Soil water content (SWC)
 
+Vol. water content at -33 kPa from SoilGrids (at field capacity)
 
-Clay content, soil pH, silt content, S_respiration, and SWC
+```{r load-swc}
+
+swc <- rast('data/covariates/swc.tif')
+```
+
+### Soil respiration
+
+allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1
+
+in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
+
+```{r}
+
+```
+
 
 ### Extra: Microbial biomass
 
@@ -351,14 +367,19 @@ slope <-  project(slope, crs, method='bilinear')
 predictor_stack <- c(slope)
 
 # realign all remaining raster layers
-predictors <- list(aspect, temp, precip, latitude, lc_dissim, clay, silt, ph)
+predictors <- list(aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc)
 for (predictor in predictors) {
   predictor <- project(predictor, slope, method="bilinear")
   predictor_stack <- append(predictor_stack, predictor)
 }
 
+# adjust names
+names(predictor_stack) <- c('slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc')
+
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
+
+plot(predictor_stack)
 
 ```
 
@@ -367,19 +388,21 @@ predictor_stack <- mask(predictor_stack, germany)
 set.seed(123)
 
 # extract data for each point from raster stack
-predictor_values <- terra::extract(predictor_stack, data)[,-1] # remove ID
+predictor_values <- terra::extract(predictor_stack, lucas)[,-1] # remove ID
 
 # add extracted values to C:N ratio data
-data <- cbind(lucas[c('Point_ID', 'cn_ratio')], predictor_values) %>% 
-  na.omit() # remove rows with missing data
+data <- cbind(lucas[c('Point_ID', 'cn_ratio')], predictor_values) %>%
+  st_drop_geometry()
 
 # randomly select points by proportion
 train_data <- data %>%
-  slice_sample(prop = 0.7)
+  slice_sample(prop = 0.7) 
+  
+train_ids <- train_data$Point_ID
 
 # use remaining rows for test
 test_data <- data %>%
-  anti_join(train_data, by='Point_ID') %>%
+  filter_out(Point_ID %in% train_ids) %>% # keep only IDs NOT in training data
   select(!Point_ID)
 
 ```
@@ -403,24 +426,25 @@ rf_model <- randomForest(
 
 ```{r test-model}
 
-train_pred_prob <- predict(
+train_pred <- predict(
   rf_model,
   newdata = train_data,
-  type   = "prob"
-)[, 2]   # 2nd column = class "1"
+)
 
+plot(train_data$cn_ratio, train_pred)
+abline(0, 1, col='red')
 ```
 
 ```{r spatial-prediction}
 
 cn_map <- terra::predict(
   object = predictor_stack, # what to predict from
-  model  = rf_model,
-  type   = "prob", # ???
-  index  = 2 # ???
+  model  = rf_model
 )
 
-names(pred_current) <- c("Mean predicted C:N ratio")
+names(cn_map) <- c("Mean predicted C:N ratio")
+
+plot(cn_map)
 
 ```
 
