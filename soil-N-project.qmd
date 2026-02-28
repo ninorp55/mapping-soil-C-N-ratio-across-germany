@@ -87,6 +87,7 @@ st_bbox(germany)
 
 # reproject to UTM 32N
 crs <- 'EPSG:25832'
+germany_4326 <- germany
 germany <- st_transform(germany, crs)
 ```
 
@@ -214,10 +215,10 @@ Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210).
 ```{r load-dem}
 
 # load raster
-dem_global <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif')
+dem_global <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif') 
 
 # crop to Germany
-dem <- crop(dem_global, germany)
+dem <- crop(dem_global, germany_4326)
 
 ```
 
@@ -268,7 +269,7 @@ maybe try if adding LC type would increase accuracy?
 
 # load land cover data and crop to Germany
 land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
-land_cover <- crop(land_cover_global, germany)
+land_cover <- crop(land_cover_global, germany_4326)
 
 plot(land_cover, col=map.pal('viridis',200))
 
@@ -303,10 +304,10 @@ eventually downloaded from SoilGrids (250m resolution)
 
 # load and crop to Germany
 
-clay <- rast('data/covariates/clay_0-5.tif') #%>%
-  # crop(germany)
-silt <- rast('data/covariates/silt_0-5.tif') #%>%
-  # crop(germany)
+clay <- rast('data/covariates/clay_0-5.tif') %>%
+  crop(germany_4326)
+silt <- rast('data/covariates/silt_0-5.tif') %>%
+  crop(germany_4326)
 
 
 ```
