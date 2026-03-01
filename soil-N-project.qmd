@@ -270,25 +270,42 @@ but is dissimilarity really more "aussagekraeftig" than the categorical LC type?
 maybe try if adding LC type would increase accuracy?
 ```{r lc-dissimilarity}
 
-# load land cover data and crop to Germany
-land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
-land_cover <- crop(land_cover_global, germany_4326)
+# set option to redo the analysis (take a few minutes) or load existing raster
+redo_lc_dissim <- FALSE
 
-plot(land_cover, col=map.pal('viridis',200))
+# set path
+lc_dissim_path <- "data/covariates/lc_dissim.tif"
 
-# transform to RasterLayer (from raster package) - required for glcm
-land_cover_rast <- raster(land_cover)
-
-# dissimilarity (from ChatGPT)
-dissim_rast <- glcm(
-  land_cover_rast,
-  window = c(3,3), # take only the 8 pixels forming the square directly around current pixel
-  shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
-  statistics = "dissimilarity"
-)
-
-# convert back to terra
-lc_dissim <- rast(dissim_rast)
+# check if file exists AND redo flag is FALSE --> just load existing raster
+if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
+  
+  lc_dissim <- rast(lc_dissim_path)
+  
+} else {
+  
+  # load land cover data and crop to Germany
+  land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
+  land_cover <- crop(land_cover_global, germany_4326)
+  
+  plot(land_cover, col=map.pal('viridis',200))
+  
+  # transform to RasterLayer (from raster package) - required for glcm
+  land_cover_rast <- raster(land_cover)
+  
+  # dissimilarity (from ChatGPT)
+  dissim_rast <- glcm(
+    land_cover_rast,
+    window = c(3,3), # take only the 8 pixels forming the square directly around current pixel
+    shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
+    statistics = "dissimilarity"
+  )
+  
+  # convert back to terra
+  lc_dissim <- rast(dissim_rast)
+  
+  # save
+  writeRaster(lc_dissim, lc_dissim_path, overwrite=TRUE)
+}
 
 plot(lc_dissim)
 
