@@ -4,6 +4,8 @@ author: "Nina Preußler"
 format:
   html:
     self-contained: true
+bibliography: references.bib
+csl: apa
 editor: visual
 knitr:
   opts_knit:
@@ -428,11 +430,7 @@ test_data <- data %>%
 
 ```
 
-In the paper, they used a bootstrapping approach, but did not specify with how many repeats.
-```{r prepare-cross-validation}
-train_control <- trainControl(method = "cv", number = 10)
 
-```
 
 ```{r train-random-forest-model}
 
@@ -475,6 +473,58 @@ plot(cn_map)
 
 ```
 
+```{r prepare-cross-validation}
+
+set.seed(123)
+
+# 10-fold CV (split model into 10 folds, run 10 times, each time, 1 fold is test while remaining 9 are used for training)
+train_control <- trainControl(method = "cv", 
+                              number = 10,
+                              savePredictions = "final"
+                              )
+
+rfModel <- train(cn_ratio ~ ., 
+                 data = select(data, !Point_ID), 
+                 method = "rf", 
+                 trControl = train_control)
+
+rfModel
+```
+
+Values refer to mean values across 10 folds
+
+rfModel$pred 
+Each row is:
+
+A prediction for one observation
+
+From the fold where it was in the validation set
+
+So these are pure out-of-fold predictions.
+
+```{r}
+best_mtry <- rfModel$bestTune$mtry
+
+cv_preds <- rfModel$pred
+cv_preds <- cv_preds[cv_preds$mtry == best_mtry, ]
+
+RMSE <- sqrt(mean((cv_preds$obs - cv_preds$pred)^2))
+R2 <- cor(cv_preds$obs, cv_preds$pred)^2
+Bias <- mean(cv_preds$pred - cv_preds$obs)
+
+x <- cv_preds$pred
+y <- cv_preds$obs
+
+rho <- cor(x, y)
+sd_x <- sd(x)
+sd_y <- sd(y)
+mean_x <- mean(x)
+mean_y <- mean(y)
+
+CCC_value <- (2 * rho * sd_x * sd_y) /
+  (sd_x^2 + sd_y^2 + (mean_x - mean_y)^2)
+```
+
 
 ## Model evaluation
 
@@ -483,12 +533,18 @@ plot(cn_map)
 -   root mean squared error (RMSE)
 -   Bias
 
+In the reference paper, it is poorly documented from which training and testing sets the accuracy metrics were obtained, so we followed the approach of @zhou_prediction_2021 and calculated them as the mean from 10-fold cross-validation to have more robust estimates.
+
 ```{r calculate-accuracy-measures}
 
 
 ```
 
 ### Uncertainty map
+
+via bootstrapping --> mean and SD map
+
+e.g., https://www.sciencedirect.com/science/article/pii/S0048969720361908 created 100 maps
 
 ## Ecological plausibility
 
@@ -518,6 +574,15 @@ plot(vg_cn, plot.nu = TRUE)
 
 ```
 --> spatial autocorrelation only to distance of ~7.5km and only small fraction of points have other points within this distance (especially when trying variogram with smaller cloud classes), so geostatistical approaches such as kriging not ideal
+
+### Covariates
+
+#### Collinearity
+
+```{r}
+terra::layerCor(predictor_stack, fun='cor')
+```
+
 
 ## Variable importance
 
