@@ -347,10 +347,9 @@ s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
 ### Extra: Microbial biomass
 
 ```{r load-microbial-biomass-data}
-setwd('~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project/data/GEB_maps')
 
-microb <- rast('Cmic_gen_annual_mean_t.tif')
-microb_eu <- read_stars('Cmic_gen_annual_mean_t.tif')
+microb <- rast('data/GEB_maps/Cmic_gen_annual_mean_t.tif')
+microb_eu <- read_stars('data/GEB_maps/Cmic_gen_annual_mean_t.tif')
 
 # subset to
 #microb <- st_filter(microb_eu, germany)
