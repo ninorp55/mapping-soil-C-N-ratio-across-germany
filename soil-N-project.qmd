@@ -1,7 +1,9 @@
 ---
 title: "Digital soil mapping of C:N ratio across Germany"
 author: "Nina Preußler"
-format: html
+format:
+  html:
+    self-contained: true
 editor: visual
 knitr:
   opts_knit:
@@ -56,6 +58,7 @@ How does spatial prediction of soil C:N stoichiometry across Germany differ when
 library(glcm)
 library(raster) # required for dissimilarity
 library(randomForest)
+library(caret) # for k-fold cross-validation
 library(sf)
 library(gstat)
 library(terra)
@@ -336,7 +339,8 @@ allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.go
 in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
 
 ```{r}
-
+s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
+  crop(germany_4326)
 ```
 
 
@@ -368,14 +372,14 @@ slope <-  project(slope, crs, method='bilinear')
 predictor_stack <- c(slope)
 
 # realign all remaining raster layers
-predictors <- list(aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc)
+predictors <- list(aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp)
 for (predictor in predictors) {
   predictor <- project(predictor, slope, method="bilinear")
   predictor_stack <- append(predictor_stack, predictor)
 }
 
 # adjust names
-names(predictor_stack) <- c('slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc')
+names(predictor_stack) <- c('slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp')
 
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
@@ -405,6 +409,12 @@ train_ids <- train_data$Point_ID
 test_data <- data %>%
   filter_out(Point_ID %in% train_ids) %>% # keep only IDs NOT in training data
   select(!Point_ID)
+
+```
+
+In the paper, they used a bootstrapping approach, but did not specify with how many repeats.
+```{r prepare-cross-validation}
+train_control <- trainControl(method = "cv", number = 10)
 
 ```
 
@@ -492,6 +502,13 @@ plot(vg_cn, plot.nu = TRUE)
 
 ```
 --> spatial autocorrelation only to distance of ~7.5km and only small fraction of points have other points within this distance (especially when trying variogram with smaller cloud classes), so geostatistical approaches such as kriging not ideal
+
+## Variable importance
+
+```{r plot-variable-importance}
+varImpPlot(rf_model, main = "Predictor Importance")
+
+```
 
 ## Evalutation
 
