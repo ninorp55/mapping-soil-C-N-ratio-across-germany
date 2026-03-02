@@ -362,6 +362,29 @@ s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
   crop(germany_4326)
 ```
 
+### HFP
+
+from https://datadryad.org/dataset/doi:10.5061/dryad.3tx95x6d9
+
+```{r load-hfp}
+
+hfp <- rast('data/covariates/Human_footprint_maps/hfp2013_merisINT.tif')
+
+```
+
+### NDVI
+
+not specified in paper how exactly
+
+We used a 3-year growing season median 
+
+see GEE script in repository
+
+```{r}
+
+
+```
+
 
 ### Extra: Microbial biomass
 
@@ -390,14 +413,14 @@ slope <-  project(slope, crs, method='bilinear')
 predictor_stack <- c(slope)
 
 # realign all remaining raster layers
-predictors <- list(aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp)
+predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp)
 for (predictor in predictors) {
   predictor <- project(predictor, slope, method="bilinear")
   predictor_stack <- append(predictor_stack, predictor)
 }
 
 # adjust names
-names(predictor_stack) <- c('slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp')
+names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp')
 
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
@@ -419,7 +442,7 @@ data <- cbind(lucas[c('Point_ID', 'cn_ratio')], predictor_values) %>%
 
 # randomly select points by proportion
 train_data <- data %>%
-  slice_sample(prop = 0.7) 
+  slice_sample(prop = 0.8) 
   
 train_ids <- train_data$Point_ID
 
