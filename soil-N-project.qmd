@@ -72,10 +72,11 @@ library(spatstat) # for computing distance between sampling points
 library(ggplot2)
 library(tidyverse)
 
-
 ```
 
 ## Study area
+
+The prediction of soil C:N was conducted for Germany. The shapefile of the administrative boundaries was obtained from `rnaturalearth` [@rnaturalearth].
 
 ```{r load-germany-mask}
 
@@ -100,8 +101,6 @@ germany <- st_transform(germany, crs)
 
 ## LUCAS soil survey
 
-LUCAS topsoil survey 2018
-
 ```{r load-lucas-data}
 
 # load LUCAS topsoil data
@@ -113,13 +112,8 @@ lucas_eu <- st_transform(lucas_eu, crs)
 # subset to Germany
 lucas <- st_filter(lucas_eu, germany)
 
-lucas %>% glimpse()
-plot(lucas["N"])
 ```
-
-### C:N ratio
-
-calculated with $\frac{\text{total N}}{\text{organic C}}$
+The measurements of soil properties were obtained from the LUCAS topsoil survey 2015. In Germany, it consisted of `r nrow(lucas)` samples. This data was used to calculate the C:N ratios by dividing soil organic carbon (SOC) by total nitrogen (N).
 
 ```{r calculate-cn-ratio}
 
@@ -170,7 +164,7 @@ tm_basemap('Esri.WorldImagery') +
                                            limits = c(0, 20)))
 ```
 
-#### Distance between sampling points
+### Distance between sampling points
 
 ```{r}
 
@@ -192,7 +186,8 @@ print(paste('Maximum distance:', round(max(distances)/1000,2), 'km'))
 
 ## Covariates
 
-based on Khosravani et al. (2025)
+The selection of environmental predictors was based on those proposed by @khosravani_soil_2026 who had identified them according to expert knowledge. We slightly modified them when not avoidable due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in TableXXX and in the following we describe all predictors more in detail.
+
 
 | Abbreviation | Full name | Unit | Source |
 |----|----|----|----|
@@ -213,37 +208,28 @@ based on Khosravani et al. (2025)
 
 : Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
 
-### Slope and aspect
 
-Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210).
+elevation, Slope and aspect
+- Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210).
+- used terra [@terra] for calculating slope and aspect
 
-```{r load-dem}
+Temperature and precipitation
+-   loaded from WorldClim (XXX)
 
-# load raster
-dem_global <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif') 
+Latitude
+extracted latitude from rasters
 
-# crop to Germany
-dem <- crop(dem_global, germany_4326)
+```{r load-covariate-data-1}
 
-```
-
-```{r calculate-slope-and-aspect}
+# load DEM raster
+dem_global <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif') %>%
+  crop(germany_4326)
 
 # calculate slope 
 slope <- terrain(dem, v = "slope", unit = "degrees")
 
 # calculate aspect
 aspect <- terrain(dem, v = "aspect", unit = "degrees")
-
-```
-
-calculated slope and aspect in degrees using terra
-
-### Temperature and precipitation
-
--   loaded from WorldClim (XXX)
-
-```{r load-worldclim-data}
 
 # WorldClim (temperature and precipitation)
 temp <- worldclim_country(country='germany', var='tavg', path='data/covariates/worldclim', res=0.5)
@@ -252,17 +238,13 @@ precip <- worldclim_country(country='germany', var='prec', path='data/covariates
 temp_annual <- mean(temp) # mean annual temperature
 precip_annual <- sum(precip) # total annual precipitation
 
-```
-
-
-### Latitude
-
-extracted latitude from rasters
-
-```{r extract-latitude}
+# latitude
 latitude <- rast(list(latitude = init(dem, "y")))
+
 ```
-### Land cover dissimilarity
+
+
+Land cover (dissimilarity)
 
 link in paper was not accessible
 
@@ -270,6 +252,7 @@ instead https://zenodo.org/records/3939038
 
 but is dissimilarity really more "aussagekraeftig" than the categorical LC type?
 maybe try if adding LC type would increase accuracy?
+
 ```{r lc-dissimilarity}
 
 # set option to redo the analysis (take a few minutes) or load existing raster
@@ -278,18 +261,16 @@ redo_lc_dissim <- FALSE
 # set path
 lc_dissim_path <- "data/covariates/lc_dissim.tif"
 
+# load land cover data and crop to Germany
+land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
+land_cover <- crop(land_cover_global, germany_4326)
+
 # check if file exists AND redo flag is FALSE --> just load existing raster
 if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
   
   lc_dissim <- rast(lc_dissim_path)
   
 } else {
-  
-  # load land cover data and crop to Germany
-  land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
-  land_cover <- crop(land_cover_global, germany_4326)
-  
-  plot(land_cover, col=map.pal('viridis',200))
   
   # transform to RasterLayer (from raster package) - required for glcm
   land_cover_rast <- raster(land_cover)
@@ -309,99 +290,67 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
   writeRaster(lc_dissim, lc_dissim_path, overwrite=TRUE)
 }
 
-plot(lc_dissim)
-
 ```
 
 
-### Clay and silt content
-
+Clay and silt content
 very poor documentation in paper!
 there it says from ISRIC
-
 eventually downloaded from SoilGrids (250m resolution)
 - clay content (g kg-1)
+- in topsoil ( 0 to 5 cm)
 
-```{r load-silt-and-clay}
+pH
+soilgrids
 
-# load and crop to Germany
+Soil water content (SWC)
+Vol. water content at -33 kPa from SoilGrids (at field capacity)
+soilgrids
+
+Soil respiration allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1
+in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
+
+
+HFP from https://datadryad.org/dataset/doi:10.5061/dryad.3tx95x6d9
+
+NDVI
+- not specified in paper how exactly calculated (besides GEE)
+- We used a 3-year growing season median (to capture long-term trends and avoid overrepresentation of weather influences; since we see C:N as a long-term property rather than a momentary snapshot)
+- see GEE script in repository
+
+```{r load-covariate-data-2}
 
 clay <- rast('data/covariates/clay_0-5.tif') %>%
   crop(germany_4326)
 silt <- rast('data/covariates/silt_0-5.tif') %>%
   crop(germany_4326)
 
+# pH
+ph <- rast('data/covariates/ph_0-5.tif') %>%
+  crop(germany_4326)
 
-```
+# soil water content (SWC)
+swc <- rast('data/covariates/swc.tif') %>%
+  crop(germany_4326)
 
-### pH
-
-```{r load-ph}
-
-ph <- rast('data/covariates/ph_0-5.tif')
-
-```
-
-### Soil water content (SWC)
-
-Vol. water content at -33 kPa from SoilGrids (at field capacity)
-
-```{r load-swc}
-
-swc <- rast('data/covariates/swc.tif')
-```
-
-### Soil respiration
-
-allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1
-
-in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
-
-```{r}
+# soil respiration
 s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
   crop(germany_4326)
-```
 
-### HFP
+# human footprint (HFP)
+hfp <- rast('data/covariates/Human_footprint_maps/hfp2013_merisINT.tif') %>%
+  crop(st_transform(germany, 'EPSG:9001'))
 
-from https://datadryad.org/dataset/doi:10.5061/dryad.3tx95x6d9
-
-```{r load-hfp}
-
-hfp <- rast('data/covariates/Human_footprint_maps/hfp2013_merisINT.tif')
-
-```
-
-### NDVI
-
-not specified in paper how exactly
-
-We used a 3-year growing season median 
-
-see GEE script in repository
-
-```{r}
-
+# Normalized Difference Vegetation Index (NDVI)
 ndvi <- rast('data/covariates/NDVI_Germany_2013_2015.tif')
 
 ```
 
 
-### Extra: Microbial biomass
 
-```{r load-microbial-biomass-data}
+Once we had obtained the raster data for all predictors, we projected them to the same CRS (EPSG 25832, UTM 32N) and resolution. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
 
-microb <- rast('data/GEB_maps/Cmic_gen_annual_mean_t.tif')
-microb_eu <- read_stars('data/GEB_maps/Cmic_gen_annual_mean_t.tif')
-
-# subset to
-#microb <- st_filter(microb_eu, germany)
-
-plot(microb_eu)
-```
-
-
-## Random Forest model
+From the resulting raster stack, we removed pixels corresponding to unsuitable land cover types (water bodies, snow, built-up land).
 
 ```{r prepare-raster-stack}
 
@@ -414,24 +363,36 @@ slope <-  project(slope, crs, method='bilinear')
 predictor_stack <- c(slope)
 
 # realign all remaining raster layers
-predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp, ndvi)
+predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp, ndvi, land_cover)
 for (predictor in predictors) {
   predictor <- project(predictor, slope, method="bilinear")
   predictor_stack <- append(predictor_stack, predictor)
 }
 
 # adjust names
-names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi')
+names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi', 'lc_class')
 
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
 
-# mask out certain land cover types (water, urban...)
-
+# mask out certain land cover types
+unsuitable_lc_classes <- c(
+  0, # no input data available
+  50, # urban/built-up
+  70, # snow and ice
+  80, # permanent water bodies
+  200 # open sea
+)
+suitable_lc <- app(predictor_stack$lc_class, fun=function(x){ x[x %in% unsuitable_lc_classes] <- NA; return(x)} ) # set pixels corresponding to those LC types to NA
+predictor_stack <- mask(predictor_stack, suitable_lc) # set to NA in whole stack
 
 plot(predictor_stack)
 
 ```
+
+
+## Random Forest model
+
 
 ```{r split-train-test}
 
@@ -502,6 +463,11 @@ plot(cn_map)
 
 ```
 
+The reference paper by @khosravani_soil_2026 only used k-fold cross-validation for hyperparameter tuning and apparently calculated training and test based on a single split. We decided to implement a k-fold cross-validation (CV) for calculating the accuracy metrics as well, to obtain more robust estimates. In k-fold CV, the dataset is split into k folds, i.e., approximately equal partitions. 
+We implemented this k-fold CV using the `caret` [@caret} package in R, setting k to 10.
+
+Both the test set accuracy as well as the metrics obtained via CV evaluate the model performance when predicting from unseen data. We therefore decided to focus on the comparison of these two, leaving out training performance since it is much less directly relevant for assessing the model. 
+
 ```{r prepare-cross-validation}
 
 set.seed(123)
@@ -512,10 +478,11 @@ train_control <- trainControl(method = "cv",
                               savePredictions = "final"
                               )
 
-rfModel <- train(cn_ratio ~ ., 
+rfModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
                  data = select(data, !Point_ID), 
-                 method = "rf", 
-                 trControl = train_control)
+                 method = "rf", # random forest
+                 trControl = train_control, # implement CV as defined above
+                 importance = TRUE) # compute permutation importance
 
 rfModel
 ```
@@ -620,9 +587,14 @@ via bootstrapping --> mean and SD map
 
 e.g., https://www.sciencedirect.com/science/article/pii/S0048969720361908 created 100 maps
 
+```{r}
+
+```
+
+
 ## Ecological plausibility
 
-- Natura 2000
+- Natura 2000 shapefile obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4
 
 # Results
 
@@ -657,27 +629,38 @@ plot(vg_cn, plot.nu = TRUE)
 terra::layerCor(predictor_stack, fun='cor')
 ```
 
+pH and SWC had a high (>0.9) correlation.
 
 ## Variable importance
 
 ```{r plot-variable-importance}
 varImpPlot(rf_model, main = "Predictor Importance")
 
+varImpPlot(rfModel$finalModel)
 ```
 
-## Evalutation
+## Evaluation
 
 ### Summary statistics of predicted C:N by land cover class
 
 # Discussion
 
+
+
+## Environmental predictors
+
+Identical to the results by @khosravani_soil_2026, pH was also by far the most important predictor in both our models. 
+
+A notable difference was the importance of NDVI. While @khosravani_soil_2026 had a relative importance of <5% for this predictor, in our models, it was the second most important covariate. 
+However, it needs to be noted that it was not clear how @khosravani_soil_2026 had computed the NDVI map. We wanted to capture it as a long-term indicator of productivity by using a 3-year growing-season median, which seemed to work well.
+
+*But does NDVI affect the C:N ratio directly or is it more likely to be a proxy for some other property?*
+
 ## Limitations
 
 -   WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
+- 
 
-### Microbial
-
-------------------------------------------------------------------------
 
 # AI documentation
 
@@ -685,3 +668,5 @@ varImpPlot(rf_model, main = "Predictor Importance")
 
 -   get an overview of possible research directions
 -   refine search terms
+
+# References
