@@ -382,6 +382,7 @@ see GEE script in repository
 
 ```{r}
 
+ndvi <- rast('data/covariates/NDVI_Germany_2013_2015.tif')
 
 ```
 
@@ -413,14 +414,14 @@ slope <-  project(slope, crs, method='bilinear')
 predictor_stack <- c(slope)
 
 # realign all remaining raster layers
-predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp)
+predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp, ndvi)
 for (predictor in predictors) {
   predictor <- project(predictor, slope, method="bilinear")
   predictor_stack <- append(predictor_stack, predictor)
 }
 
 # adjust names
-names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp')
+names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi')
 
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
@@ -469,6 +470,8 @@ rf_model <- randomForest(
   ntree = 500,       # number of trees
   importance = TRUE  # calculate variable importance scores
 )
+
+rf_model
 
 ```
 
