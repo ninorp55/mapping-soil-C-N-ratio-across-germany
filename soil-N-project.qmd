@@ -426,6 +426,9 @@ names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
 
+# mask out certain land cover types (water, urban...)
+
+
 plot(predictor_stack)
 
 ```
@@ -551,6 +554,51 @@ CCC_value <- (2 * rho * sd_x * sd_y) /
   (sd_x^2 + sd_y^2 + (mean_x - mean_y)^2)
 ```
 
+## Cubist model
+
+```{r}
+library(Cubist)
+
+train_pred <- select(train_data, !cn_ratio)
+train_resp <- train_data$cn_ratio
+
+model_tree <- cubist(x = train_pred, y = train_resp)
+model_tree
+
+summary(model_tree)
+
+```
+
+```{r predict-cubist}
+
+cn_map_cubist <- terra::predict(
+  object = predictor_stack, # what to predict from
+  model  = model_tree
+)
+
+names(cn_map_cubist) <- c("Mean predicted C:N ratio (cubist)")
+
+cn_map_cubist <- mask(cn_map_cubist, germany)
+
+plot(cn_map_cubist)
+
+```
+
+```{r difference-map}
+
+diff_map <- cn_map - cn_map_cubist
+plot(diff_map)
+
+# Define breakpoints and colors
+breaks <- c(minmax(diff_map)[1], -2, 2, minmax(diff_map)[2])
+
+colors <- c("red",        # below -5
+            "lightgrey",  # between -5 and 5
+            "blue")       # above 5
+
+# Plot with custom colors
+plot(diff_map, breaks = breaks, col = colors, legend = TRUE)
+```
 
 ## Model evaluation
 
