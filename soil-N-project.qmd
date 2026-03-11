@@ -1,21 +1,24 @@
 ---
 title: "Digital soil mapping of C:N ratio across Germany"
-author: "Nina Preußler"
+author: " & Nina Preußler"
 format:
   html:
-    self-contained: true
-bibliography: references.bib
-csl: apa
+    self-contained: true 
+execute: # set global chunk options
+  echo: true # show code 
+  warning: false # don't show warnings
+  error: false # only render if no errors arise
+bibliography: references.bib # li
+csl: apa # citation style
 editor: visual
 knitr:
   opts_knit:
-    root.dir: "~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project"
+    root.dir: "~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project" # working directory
 ---
 
 # Title
 
-Comparison of Random Forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany
-accuracy measures, spatial patterns, variable importance
+Comparison of Random Forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany accuracy measures, spatial patterns, variable importance
 
 # Introduction
 
@@ -35,29 +38,24 @@ accuracy measures, spatial patterns, variable importance
     -   data
     -   quality
     -   challenges
-    
+
 ## Fragestellung
 
-- methodische Gap: keine Random Forest prediction in Deutschland
+-   methodische Gap: keine Random Forest prediction in Deutschland
 
-Schlagwörter:
-- Random Forest
-- C:N ratio Stöchiometrie 
-- systematischer Vergleich
-  - accuracy (Genauigkeit?)
-  - spatial patterns (z.B. Boxplot nach land cover, elevation; visueller Eindruck, hotspots)
-  - Variablen (importance, partial dependence)
+Schlagwörter: - Random Forest - C:N ratio Stöchiometrie - systematischer Vergleich - accuracy (Genauigkeit?) - spatial patterns (z.B. Boxplot nach land cover, elevation; visueller Eindruck, hotspots) - Variablen (importance, partial dependence)
 
-How does spatial prediction of soil C:N stoichiometry across Germany differ when using a Random Forest model compared to a cubist approach? 
+How does spatial prediction of soil C:N stoichiometry across Germany differ when using a Random Forest model compared to a cubist approach?
 
 "ökologischer Plausibilitätscheck"
 
-
 # Methods
 
-```{r load-packages, include=FALSE}
+```{r load-packages}
+#| include: false
 
 library(glcm)
+library(Cubist)
 library(raster) # required for dissimilarity
 library(randomForest)
 library(caret) # for k-fold cross-validation
@@ -65,13 +63,14 @@ library(sf)
 library(gstat)
 library(terra)
 library(tmap)
-library(stars)
 library(devtools)
 library(geodata)
 library(spatstat) # for computing distance between sampling points
 library(ggplot2)
+library(patchwork)
 library(tidyverse)
 
+options(renv.config.startup.quiet = TRUE)
 ```
 
 ## Study area
@@ -99,7 +98,7 @@ germany <- st_transform(germany, crs)
 
 ## Data
 
-## LUCAS soil survey
+### LUCAS soil survey
 
 ```{r load-lucas-data}
 
@@ -113,9 +112,13 @@ lucas_eu <- st_transform(lucas_eu, crs)
 lucas <- st_filter(lucas_eu, germany)
 
 ```
+
 The measurements of soil properties were obtained from the LUCAS topsoil survey 2015. In Germany, it consisted of `r nrow(lucas)` samples. This data was used to calculate the C:N ratios by dividing soil organic carbon (SOC) by total nitrogen (N).
 
 ```{r calculate-cn-ratio}
+#| fig-cap: "Distribution of C:N ratio values from LUCAS 2015 samples in Germany."
+#| fig-height: 3
+#| fig-dpi: 200
 
 # first make columns numeric, then add new column with ratio
 lucas <- lucas %>%
@@ -124,10 +127,13 @@ lucas <- lucas %>%
          cn_ratio = OC / N)
 
 ggplot(lucas, aes(cn_ratio)) +
-  geom_histogram(binwidth = 0.5) 
+  geom_histogram(binwidth = 0.5) +
+  labs(x = "C:N ratio", y = "number of samples")
 ```
 
 ```{r remove-nans-and-outliers}
+#| eval: false # don't execute
+#| include: false
 
 # copy before cleaning
 lucas_init <- lucas
@@ -149,9 +155,12 @@ lucas <- lucas %>%
 ggplot(lucas, aes(cn_ratio, fill=cn_ratio_no_outlier)) +
   geom_histogram(binwidth = 0.5) 
 ```
-but doesn't really make sense because then we limit the prediction range of RF
+
+There was one notable outlier at a ratio of almost 40, but we did not remove it because it helps increases the prediction range of the random forest algorithm. The extreme value most likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
 
 ```{r plot-lucas-points-germany}
+#| include: false
+#| eval: false
 
 tmap_mode("view")
 tm_basemap('Esri.WorldImagery') +
@@ -188,7 +197,6 @@ print(paste('Maximum distance:', round(max(distances)/1000,2), 'km'))
 
 The selection of environmental predictors was based on those proposed by @khosravani_soil_2026 who had identified them according to expert knowledge. We slightly modified them when not avoidable due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in TableXXX and in the following we describe all predictors more in detail.
 
-
 | Abbreviation | Full name | Unit | Source |
 |----|----|----|----|
 | ann_temp | Mean annual temperature |  |  |
@@ -208,21 +216,16 @@ The selection of environmental predictors was based on those proposed by @khosra
 
 : Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
 
+elevation, Slope and aspect - Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210). - used terra [@terra] for calculating slope and aspect
 
-elevation, Slope and aspect
-- Used DEM from Hengl / Yamazaki et al (https://zenodo.org/records/1447210).
-- used terra [@terra] for calculating slope and aspect
+Temperature and precipitation - loaded from WorldClim (XXX)
 
-Temperature and precipitation
--   loaded from WorldClim (XXX)
-
-Latitude
-extracted latitude from rasters
+Latitude extracted latitude from rasters
 
 ```{r load-covariate-data-1}
 
 # load DEM raster
-dem_global <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif') %>%
+dem <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_2017_v1.0.tif') %>%
   crop(germany_4326)
 
 # calculate slope 
@@ -243,17 +246,15 @@ latitude <- rast(list(latitude = init(dem, "y")))
 
 ```
 
-
 Land cover (dissimilarity)
 
 link in paper was not accessible
 
 instead https://zenodo.org/records/3939038
 
-but is dissimilarity really more "aussagekraeftig" than the categorical LC type?
-maybe try if adding LC type would increase accuracy?
+but is dissimilarity really more "aussagekraeftig" than the categorical LC type? maybe try if adding LC type would increase accuracy?
 
-```{r lc-dissimilarity}
+```{r lc-and-dissimilarity}
 
 # set option to redo the analysis (take a few minutes) or load existing raster
 redo_lc_dissim <- FALSE
@@ -262,9 +263,10 @@ redo_lc_dissim <- FALSE
 lc_dissim_path <- "data/covariates/lc_dissim.tif"
 
 # load land cover data and crop to Germany
-land_cover_global <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif')
-land_cover <- crop(land_cover_global, germany_4326)
+land_cover <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif') %>%
+  crop(germany_4326)
 
+# obtain LC dissimilarity
 # check if file exists AND redo flag is FALSE --> just load existing raster
 if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
   
@@ -278,7 +280,7 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
   # dissimilarity (from ChatGPT)
   dissim_rast <- glcm(
     land_cover_rast,
-    window = c(3,3), # take only the 8 pixels forming the square directly around current pixel
+    window = c(5,5), # take only the 8 pixels forming the square directly around current pixel
     shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
     statistics = "dissimilarity"
   )
@@ -292,31 +294,17 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
 
 ```
 
+Clay and silt content very poor documentation in paper! there it says from ISRIC eventually downloaded from SoilGrids (250m resolution) - clay content (g kg-1) - in topsoil ( 0 to 5 cm)
 
-Clay and silt content
-very poor documentation in paper!
-there it says from ISRIC
-eventually downloaded from SoilGrids (250m resolution)
-- clay content (g kg-1)
-- in topsoil ( 0 to 5 cm)
+pH soilgrids
 
-pH
-soilgrids
+Soil water content (SWC) Vol. water content at -33 kPa from SoilGrids (at field capacity) soilgrids
 
-Soil water content (SWC)
-Vol. water content at -33 kPa from SoilGrids (at field capacity)
-soilgrids
-
-Soil respiration allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1
-in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
-
+Soil respiration allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1 in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
 
 HFP from https://datadryad.org/dataset/doi:10.5061/dryad.3tx95x6d9
 
-NDVI
-- not specified in paper how exactly calculated (besides GEE)
-- We used a 3-year growing season median (to capture long-term trends and avoid overrepresentation of weather influences; since we see C:N as a long-term property rather than a momentary snapshot)
-- see GEE script in repository
+NDVI - not specified in paper how exactly calculated (besides GEE) - We used a 3-year growing season median (to capture long-term trends and avoid overrepresentation of weather influences; since we see C:N as a long-term property rather than a momentary snapshot) - see GEE script in repository
 
 ```{r load-covariate-data-2}
 
@@ -338,15 +326,13 @@ s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
   crop(germany_4326)
 
 # human footprint (HFP)
-hfp <- rast('data/covariates/Human_footprint_maps/hfp2013_merisINT.tif') %>%
-  crop(st_transform(germany, 'EPSG:9001'))
+hfp <- rast('data/covariates/Human_footprint_maps/hfp2013_merisINT.tif') 
+hfp <- crop(hfp, st_transform(germany, crs(hfp)))
 
 # Normalized Difference Vegetation Index (NDVI)
 ndvi <- rast('data/covariates/NDVI_Germany_2013_2015.tif')
 
 ```
-
-
 
 Once we had obtained the raster data for all predictors, we projected them to the same CRS (EPSG 25832, UTM 32N) and resolution. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
 
@@ -363,14 +349,18 @@ slope <-  project(slope, crs, method='bilinear')
 predictor_stack <- c(slope)
 
 # realign all remaining raster layers
-predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp, ndvi, land_cover)
+predictors <- list(dem, aspect, temp_annual, precip_annual, latitude, lc_dissim, clay, silt, ph, swc, s_resp, hfp, ndvi)
 for (predictor in predictors) {
   predictor <- project(predictor, slope, method="bilinear")
   predictor_stack <- append(predictor_stack, predictor)
 }
 
+# add land cover (categorical, therefore use different reprojection method)
+land_cover_reproj <- project(land_cover, slope, method='mode') # majority voting
+predictor_stack <- append(predictor_stack, land_cover_reproj)
+
 # adjust names
-names(predictor_stack) <- c('elevation', 'slope', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi', 'lc_class')
+names(predictor_stack) <- c('slope', 'elevation', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi', 'lc_class')
 
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
@@ -386,89 +376,45 @@ unsuitable_lc_classes <- c(
 suitable_lc <- app(predictor_stack$lc_class, fun=function(x){ x[x %in% unsuitable_lc_classes] <- NA; return(x)} ) # set pixels corresponding to those LC types to NA
 predictor_stack <- mask(predictor_stack, suitable_lc) # set to NA in whole stack
 
+# add dummy variables encoding major land cover types
+forest_codes <- c(111,112,113,114,115,116,121,122,123,124,125,126)
+forest <- predictor_stack$lc_class %in% forest_codes  # returns binary raster (True/False)
+
+grassland <- predictor_stack$lc_class == 30 
+wetland <- predictor_stack$lc_class == 90 
+cropland <- predictor_stack$lc_class == 40 
+
+# add to predictor stack
+predictor_stack <- c(predictor_stack, forest*1, grassland*1, wetland*1, cropland*1)
+names(predictor_stack) <- c(names(predictor_stack)[1:(length(names(predictor_stack))-4)], 'forest', 'grassland', 'wetland', 'cropland')
+
 plot(predictor_stack)
 
 ```
 
-
 ## Random Forest model
 
 
-```{r split-train-test}
-
-set.seed(123)
+```{r prepare-model-data}
 
 # extract data for each point from raster stack
 predictor_values <- terra::extract(predictor_stack, lucas)[,-1] # remove ID
 
-# add extracted values to C:N ratio data
-data <- cbind(lucas[c('Point_ID', 'cn_ratio')], predictor_values) %>%
-  st_drop_geometry()
+# combine with C:N data and remove unnecessary colums
+data <- cbind(lucas['cn_ratio'], predictor_values) %>%
+  drop_na() %>%
+  st_drop_geometry() 
 
-# randomly select points by proportion
-train_data <- data %>%
-  slice_sample(prop = 0.8) 
-  
-train_ids <- train_data$Point_ID
-
-# use remaining rows for test
-test_data <- data %>%
-  filter_out(Point_ID %in% train_ids) %>% # keep only IDs NOT in training data
-  select(!Point_ID)
-
+nrow(data)
 ```
 
+The reference paper by @khosravani_soil_2026 only used k-fold cross-validation for hyperparameter tuning and apparently calculated training and test based on a single split. We decided to implement a k-fold cross-validation (CV) for calculating the accuracy metrics as well, to obtain more robust estimates. In k-fold CV, the dataset is split into k folds, i.e., approximately equal partitions. We implemented this k-fold CV using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning for the parameter `mtry`, i.e., the number of predictors used at each split.
 
+Both the test set accuracy as well as the metrics obtained via CV evaluate the model performance when predicting from unseen data. We therefore decided to focus on the comparison of these two, leaving out training performance since it is much less directly relevant for assessing the model.
 
-```{r train-random-forest-model}
+CV also used for hyperparameter tuning, specifically to pick the optimal number for `mtry` which denotes the number of predictors to use at each split.
 
-set.seed(123)
-
-# remove Point_ID
-train_data <- select(train_data, !Point_ID)
-
-# train model
-rf_model <- randomForest(
-  cn_ratio ~ .,      # C:N as function of all other columns (predictors)
-  data = train_data,
-  ntree = 500,       # number of trees
-  importance = TRUE  # calculate variable importance scores
-)
-
-rf_model
-
-```
-
-```{r test-model}
-
-train_pred <- predict(
-  rf_model,
-  newdata = train_data,
-)
-
-plot(train_data$cn_ratio, train_pred)
-abline(0, 1, col='red')
-```
-
-```{r spatial-prediction}
-
-cn_map <- terra::predict(
-  object = predictor_stack, # what to predict from
-  model  = rf_model
-)
-
-names(cn_map) <- c("Mean predicted C:N ratio")
-
-plot(cn_map)
-
-```
-
-The reference paper by @khosravani_soil_2026 only used k-fold cross-validation for hyperparameter tuning and apparently calculated training and test based on a single split. We decided to implement a k-fold cross-validation (CV) for calculating the accuracy metrics as well, to obtain more robust estimates. In k-fold CV, the dataset is split into k folds, i.e., approximately equal partitions. 
-We implemented this k-fold CV using the `caret` [@caret} package in R, setting k to 10.
-
-Both the test set accuracy as well as the metrics obtained via CV evaluate the model performance when predicting from unseen data. We therefore decided to focus on the comparison of these two, leaving out training performance since it is much less directly relevant for assessing the model. 
-
-```{r prepare-cross-validation}
+```{r rf-cross-validation}
 
 set.seed(123)
 
@@ -478,96 +424,53 @@ train_control <- trainControl(method = "cv",
                               savePredictions = "final"
                               )
 
+
 rfModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
-                 data = select(data, !Point_ID), 
+                 data = data, 
                  method = "rf", # random forest
+                 tuneLength = 5,
+                 ntree = 500,
                  trControl = train_control, # implement CV as defined above
                  importance = TRUE) # compute permutation importance
 
 rfModel
 ```
+Hyperparameter tuning via `caret` indicated that `mtry` `r rfModel$bestTune$mtry` had the lowest RMSE.
 
-Values refer to mean values across 10 folds
-
-rfModel$pred 
-Each row is:
-
-A prediction for one observation
-
-From the fold where it was in the validation set
-
-So these are pure out-of-fold predictions.
-
-```{r}
-best_mtry <- rfModel$bestTune$mtry
-
-cv_preds <- rfModel$pred
-cv_preds <- cv_preds[cv_preds$mtry == best_mtry, ]
-
-RMSE <- sqrt(mean((cv_preds$obs - cv_preds$pred)^2))
-R2 <- cor(cv_preds$obs, cv_preds$pred)^2
-Bias <- mean(cv_preds$pred - cv_preds$obs)
-
-x <- cv_preds$pred
-y <- cv_preds$obs
-
-rho <- cor(x, y)
-sd_x <- sd(x)
-sd_y <- sd(y)
-mean_x <- mean(x)
-mean_y <- mean(y)
-
-CCC_value <- (2 * rho * sd_x * sd_y) /
-  (sd_x^2 + sd_y^2 + (mean_x - mean_y)^2)
-```
 
 ## Cubist model
 
-```{r}
+While we originally wanted to compare our results from the Random Forest Regression with the Cubist predicitons from @khosravani_soil_2026, we were not able to accurately replicate their methodology (particularly the covariate layer acquisition and preprocessing) due to gaps in documentation. 
+
+We therefore implemented a cubist model ourselves, that is trained in the same way (10-fold CV) as the RF.
+
+```{r cubist-cross-validation}
+
 library(Cubist)
 
-train_pred <- select(train_data, !cn_ratio)
-train_resp <- train_data$cn_ratio
+set.seed(123)
 
-model_tree <- cubist(x = train_pred, y = train_resp)
-model_tree
+cubModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
+                 data = data, 
+                 method = "cubist", 
+                 trControl = train_control, # implement CV as defined above for Random Forest
+                 importance = TRUE) # compute permutation importance
 
-summary(model_tree)
-
+cubModel
 ```
 
-```{r predict-cubist}
+`r cubModel$bestTune$committees`  committees and `r cubModel$bestTune$neighbors`  neighbors led to the lowest RMSE.
 
-cn_map_cubist <- terra::predict(
-  object = predictor_stack, # what to predict from
-  model  = model_tree
-)
+## Variable importance
 
-names(cn_map_cubist) <- c("Mean predicted C:N ratio (cubist)")
+calculated from the best-fit model trained on all data after CV
 
-cn_map_cubist <- mask(cn_map_cubist, germany)
 
-plot(cn_map_cubist)
 
-```
 
-```{r difference-map}
+## Model performance
 
-diff_map <- cn_map - cn_map_cubist
-plot(diff_map)
-
-# Define breakpoints and colors
-breaks <- c(minmax(diff_map)[1], -2, 2, minmax(diff_map)[2])
-
-colors <- c("red",        # below -5
-            "lightgrey",  # between -5 and 5
-            "blue")       # above 5
-
-# Plot with custom colors
-plot(diff_map, breaks = breaks, col = colors, legend = TRUE)
-```
-
-## Model evaluation
+Accuracy metrics
 
 -   coefficient of determination (R2)
 -   concordance correlation coefficient (CCC)
@@ -578,31 +481,291 @@ In the reference paper, it is poorly documented from which training and testing 
 
 ```{r calculate-accuracy-measures}
 
+# extract observations, predictions, and fold columns from best-fit model
+rf_preds <- rfModel$pred %>%
+  select(pred, obs, Resample)
+
+# calculate accuracy metrics per fold
+rf_preds_accuracy <- rf_preds %>%
+  group_by(Resample) %>%
+  summarise(
+    RMSE = sqrt(mean((obs - pred)^2)),
+    R2 = 1 - ((mean((obs - pred)^2))/(mean((obs - mean(rf_preds$obs))^2))),
+    Bias = mean(obs - pred),
+    CCC = (2 * cor(rf_preds$obs, rf_preds$pred) * sd(rf_preds$obs) * sd(rf_preds$pred)) /
+  (var(rf_preds$obs) + var(rf_preds$pred) + (mean(obs) - mean(pred))^2)
+)
+
+# same for cubist
+cubist_preds <- cubModel$pred %>%
+  select(pred, obs, Resample)
+
+cubist_preds_accuracy <- cubist_preds %>%
+  group_by(Resample) %>%
+  summarise(
+    RMSE = sqrt(mean((obs - pred)^2)),
+    R2 = 1 - ((mean((obs - pred)^2))/(mean((obs - mean(cubist_preds$obs))^2))),
+    Bias = mean(obs - pred),
+    CCC = (2 * cor(cubist_preds$obs, cubist_preds$pred) * sd(cubist_preds$obs) * sd(cubist_preds$pred)) /
+  (var(cubist_preds$obs) + var(cubist_preds$pred) + (mean(obs) - mean(pred))^2)
+)
+
+# combine in one df
+rf_preds_accuracy$model <- "Random Forest"
+cubist_preds_accuracy$model <- "Cubist"
+accuracies <- rbind(rf_preds_accuracy, cubist_preds_accuracy)
+
+# average within each model across folds
+accuracies_summarized <- accuracies %>%
+  group_by(model) %>%
+  summarise(across(everything(), mean)) %>%
+  select(!Resample)
+  
+```
+
+## Mapping
+
+To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosravani_soil_2026 did. Due to computational constraints, we used 30 iteration for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, we calculated the mean predicted C:N as well as uncertainty map based on the standard deviation. To investigate possible spatial patterns between the RF and Cubist predictions, we also computed a difference map by substracting the mean Cubist from the mean RF map.
+
+```{r bootstrapping}
+
+# TAKES LONG! only redo if something about data changed
+redo_bootstrap <- FALSE
+
+# set number of bootstrapping runs
+b_max = 5
+
+n = nrow(data)
+
+# downsample raster stack for testing
+predictor_stack_coarse <- terra::aggregate(predictor_stack, fact = 3)
+
+if (redo_bootstrap) {
+  
+  for (b in seq(1,b_max)) {
+    
+    # progress report
+    cat("Bootstrap iteration:", b, "of", b_max, "\n")
+    
+    # get indexes via bootstrap sampling (with replacement)
+    idxs <- sample(n, size=n, replace = TRUE)
+    
+    # subset data
+    boot_data <- data[idxs,]
+    
+    # train models (with best hyperparameter tuning values) on it
+    rf_model <- randomForest(
+      cn_ratio ~ .,      # C:N as function of all other columns (predictors)
+      data = boot_data,
+      mtry = rfModel$bestTune$mtry,
+      ntree = 500       # number of trees
+      )
+    cubist_model <- cubist(
+      x = select(boot_data, !cn_ratio), 
+      y = boot_data$cn_ratio,
+      committees = cubModel$bestTune$committees
+      )
+    
+    # spatial prediction
+    map_rf <- terra::predict(
+      object = predictor_stack_coarse, # what to predict from
+      model  = rf_model,
+      cores=4, # parallel processing
+      cpkgs = "randomForest", # package needed to run prediction
+      filename = paste0('data/bootstrap_prediction_layers/rf_', b, '.tif' ), # write to disk instead of keeping in memory
+      overwrite = TRUE
+      )
+    map_cubist <- terra::predict(
+      object = predictor_stack_coarse, 
+      model  = cubist_model,
+      cores=4,
+      cpkgs = "Cubist", 
+      filename = paste0('data/bootstrap_prediction_layers/cub_', b, '.tif' ), 
+      overwrite = TRUE
+    )
+  }
+}
 
 ```
 
-### Uncertainty map
-
-via bootstrapping --> mean and SD map
-
-e.g., https://www.sciencedirect.com/science/article/pii/S0048969720361908 created 100 maps
 
 ```{r}
 
+# load bootstrapping map predictions
+path <- 'data/bootstrap_prediction_layers/'
+rf_boot_stack <- rast(paste0(path, list.files(path, pattern='rf*')))
+cub_boot_stack <- rast(paste0(path, list.files(path, pattern='cub*')))
+
+# mask cubist stack with germany
+cub_boot_stack <- mask(cub_boot_stack, germany)
+
+# compute mean and standard deviation across layers
+rf_mean_map <- app(rf_boot_stack, mean)
+rf_sd_map   <- app(rf_boot_stack, sd)
+
+cub_mean_map <- app(cub_boot_stack, mean)
+cub_sd_map   <- app(cub_boot_stack, sd)
+
+# difference map
+diff_map <- rf_mean_map - cub_mean_map
+
 ```
+
+e.g., https://www.sciencedirect.com/science/article/pii/S0048969720361908 created 100 maps
 
 
 ## Ecological plausibility
 
-- Natura 2000 shapefile obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4
+To illustrate a possible use case for C:N maps, we tested whether 
+
+For this purpose, we used a shapefile of Natura 2000 areas obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4. 
+
+```{r load-natura-2000}
+
+natura <- st_read('data/SHP/Natura2000_end2024_epsg3035.shp') %>%
+  st_transform(crs) %>%
+  st_intersection(germany)
+
+# mask with shapefile to get distribution within and outside pro
+rf_mean_map_natura <- mask(rf_mean_map, natura)
+rf_mean_map_not_natura <- mask(rf_mean_map, natura, inverse=TRUE)
+
+cub_mean_map_natura <- mask(cub_mean_map, natura)
+cub_mean_map_not_natura <- mask(cub_mean_map, natura, inverse=TRUE)
+```
 
 # Results
 
-## Exploratory data analysis
+## Model performance
 
-### C:N ratio
+- models had very similar performance
+- RF slightly higher R2 and lower RMSE, see @accuracy-table
+- RF tends to overestimate values (slightly negative bias), especially lower observed values
+- cubist tends to underestimate (positive bias)
+- cubist had higher CCC, also visible in @plot-obs-vs-pred
+- 
 
-#### Spatial autocorrelation
+```{r accuracy-table}
+accuracies_summarized
+```
+
+
+```{r plot-obs-vs-pred}
+
+# two-panel plot with RF and cubist
+
+# Bin size control + color palette
+ggplot(rf_preds, aes(obs, pred) ) +
+  geom_hex(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  coord_equal() 
+
+ggplot(cubist_preds, aes(obs, pred) ) +
+  geom_hex(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  coord_equal() #+
+  # xlim(5, 20) +
+  # ylim(5,20)
+
+```
+
+
+## Maps
+
+```{r mean-and-uncertainty-maps}
+plot(rf_mean_map, main='Mean prediction Random Forest')
+plot(rf_sd_map, main='Uncertainty map Random Forest')
+
+plot(cub_mean_map, main='Mean prediction Cubist')
+plot(cub_sd_map, main='Uncertainty map Cubist')
+```
+
+
+```{r plot-difference-map}
+
+# Define breakpoints and colors
+breaks <- c(minmax(diff_map)[1], -1, 1, minmax(diff_map)[2])
+
+colors <- c("red",        # below -2
+            "lightgrey",  # between -2 and 2
+            "blue")       # above 2
+
+# Plot with custom colors
+plot(diff_map, breaks = breaks, col = colors, legend = TRUE)
+
+```
+
+
+```{r correlation-rf-cubist}
+cor(arrange(rfModel$pred, rowIndex)['pred'], arrange(cubModel$pred, rowIndex)['pred'])
+```
+
+
+## Variable importance
+
+```{r plot-variable-importance}
+varImpPlot(rfModel$finalModel, main = "Predictor Importance Random Forest")
+```
+
+```{r variable-importance}
+varImp(rfModel)
+
+varImp(cubModel)
+```
+
+
+
+## Evaluation
+
+### Summary statistics of predicted C:N by land cover class
+
+
+### Ecological plausibility
+
+```{r compare-natura-boxplot}
+
+rf_natura <- values(rf_mean_map_natura)
+rf_not_natura <- values(rf_mean_map_not_natura)
+cub_natura <- values(cub_mean_map_natura)
+cub_not_natura <- values(cub_mean_map_not_natura)
+
+boxplot(cbind(rf_natura, rf_not_natura, cub_natura, cub_not_natura))
+```
+
+
+# Discussion
+
+## Environmental predictors
+
+Identical to the results by @khosravani_soil_2026, pH was also by far the most important predictor in both our models.
+
+A notable difference was the importance of NDVI. While @khosravani_soil_2026 had a relative importance of \<5% for this predictor, in our models, it was the second most important covariate. However, it needs to be noted that it was not clear how @khosravani_soil_2026 had computed the NDVI map. We wanted to capture it as a long-term indicator of productivity by using a 3-year growing-season median, which seemed to work well.
+
+*But does NDVI affect the C:N ratio directly or is it more likely to be a proxy for some other property?*
+
+## Limitations
+
+-   WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
+-   
+
+# AI documentation
+
+## Preparation phase
+
+-   get an overview of possible research directions
+-   refine search terms
+
+## Coding
+
+# Appendix
+
+
+
+## Spatial autocorrelation C:N
 
 ```{r c-n-experimental-variogram}
 
@@ -619,54 +782,20 @@ vg_cn <- variogram(gstat_cn, cloud=F, boundaries=seq(2000, 10000, 2000))
 plot(vg_cn, plot.nu = TRUE)
 
 ```
---> spatial autocorrelation only to distance of ~7.5km and only small fraction of points have other points within this distance (especially when trying variogram with smaller cloud classes), so geostatistical approaches such as kriging not ideal
 
-### Covariates
+--\> spatial autocorrelation only to distance of \~7.5km and only small fraction of points have other points within this distance (especially when trying variogram with smaller cloud classes), so geostatistical approaches such as kriging not ideal
 
-#### Collinearity
+
+## Predictor plots and histograms
+
+
+### Collinearity
 
 ```{r}
 terra::layerCor(predictor_stack, fun='cor')
 ```
 
-pH and SWC had a high (>0.9) correlation.
+pH and SWC had a high (\>0.9) correlation.
 
-## Variable importance
-
-```{r plot-variable-importance}
-varImpPlot(rf_model, main = "Predictor Importance")
-
-varImpPlot(rfModel$finalModel)
-```
-
-## Evaluation
-
-### Summary statistics of predicted C:N by land cover class
-
-# Discussion
-
-
-
-## Environmental predictors
-
-Identical to the results by @khosravani_soil_2026, pH was also by far the most important predictor in both our models. 
-
-A notable difference was the importance of NDVI. While @khosravani_soil_2026 had a relative importance of <5% for this predictor, in our models, it was the second most important covariate. 
-However, it needs to be noted that it was not clear how @khosravani_soil_2026 had computed the NDVI map. We wanted to capture it as a long-term indicator of productivity by using a 3-year growing-season median, which seemed to work well.
-
-*But does NDVI affect the C:N ratio directly or is it more likely to be a proxy for some other property?*
-
-## Limitations
-
--   WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
-- 
-
-
-# AI documentation
-
-## Preparation phase
-
--   get an overview of possible research directions
--   refine search terms
 
 # References
