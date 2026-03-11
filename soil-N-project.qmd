@@ -356,37 +356,37 @@ for (predictor in predictors) {
 }
 
 # add land cover (categorical, therefore use different reprojection method)
-land_cover_reproj <- project(land_cover, slope, method='mode') # majority voting
-predictor_stack <- append(predictor_stack, land_cover_reproj)
+#land_cover_reproj <- project(land_cover, slope, method='mode') # majority voting
+#predictor_stack <- append(predictor_stack, land_cover_reproj)
 
 # adjust names
-names(predictor_stack) <- c('slope', 'elevation', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi', 'lc_class')
+names(predictor_stack) <- c('slope', 'elevation', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi')#, 'lc_class')
 
 # mask with Germany (extract exact shape)
 predictor_stack <- mask(predictor_stack, germany)
 
-# mask out certain land cover types
-unsuitable_lc_classes <- c(
-  0, # no input data available
-  50, # urban/built-up
-  70, # snow and ice
-  80, # permanent water bodies
-  200 # open sea
-)
-suitable_lc <- app(predictor_stack$lc_class, fun=function(x){ x[x %in% unsuitable_lc_classes] <- NA; return(x)} ) # set pixels corresponding to those LC types to NA
-predictor_stack <- mask(predictor_stack, suitable_lc) # set to NA in whole stack
-
-# add dummy variables encoding major land cover types
-forest_codes <- c(111,112,113,114,115,116,121,122,123,124,125,126)
-forest <- predictor_stack$lc_class %in% forest_codes  # returns binary raster (True/False)
-
-grassland <- predictor_stack$lc_class == 30 
-wetland <- predictor_stack$lc_class == 90 
-cropland <- predictor_stack$lc_class == 40 
-
-# add to predictor stack
-predictor_stack <- c(predictor_stack, forest*1, grassland*1, wetland*1, cropland*1)
-names(predictor_stack) <- c(names(predictor_stack)[1:(length(names(predictor_stack))-4)], 'forest', 'grassland', 'wetland', 'cropland')
+# # mask out certain land cover types
+# unsuitable_lc_classes <- c(
+#   0, # no input data available
+#   50, # urban/built-up
+#   70, # snow and ice
+#   80, # permanent water bodies
+#   200 # open sea
+# )
+# suitable_lc <- app(predictor_stack$lc_class, fun=function(x){ x[x %in% unsuitable_lc_classes] <- NA; return(x)} ) # set pixels corresponding to those LC types to NA
+# predictor_stack <- mask(predictor_stack, suitable_lc) # set to NA in whole stack
+# 
+# # add dummy variables encoding major land cover types
+# forest_codes <- c(111,112,113,114,115,116,121,122,123,124,125,126)
+# forest <- predictor_stack$lc_class %in% forest_codes  # returns binary raster (True/False)
+# 
+# grassland <- predictor_stack$lc_class == 30 
+# wetland <- predictor_stack$lc_class == 90 
+# cropland <- predictor_stack$lc_class == 40 
+# 
+# # add to predictor stack
+# predictor_stack <- c(predictor_stack, forest*1, grassland*1, wetland*1, cropland*1)
+# names(predictor_stack) <- c(names(predictor_stack)[1:(length(names(predictor_stack))-4)], 'forest', 'grassland', 'wetland', 'cropland')
 
 plot(predictor_stack)
 
@@ -511,17 +511,26 @@ cubist_preds_accuracy <- cubist_preds %>%
 )
 
 # combine in one df
-rf_preds_accuracy$model <- "Random Forest"
-cubist_preds_accuracy$model <- "Cubist"
+rf_preds_accuracy$Model <- "Random Forest"
+cubist_preds_accuracy$Model <- "Cubist"
 accuracies <- rbind(rf_preds_accuracy, cubist_preds_accuracy)
 
 # average within each model across folds
 accuracies_summarized <- accuracies %>%
-  group_by(model) %>%
+  group_by(Model) %>%
   summarise(across(everything(), mean)) %>%
+  # add SD as well
   select(!Resample)
   
 ```
+
+To evaluate whether the models' performance was significantly different, we conducted a paired T-test.
+```{r paired-t-test}
+t.test(accuracies$R2 ~ accuracies$model)
+
+t.test(accuracies$RMSE ~ accuracies$model)
+```
+
 
 ## Mapping
 
@@ -533,15 +542,16 @@ To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosra
 redo_bootstrap <- FALSE
 
 # set number of bootstrapping runs
-b_max = 5
+b_max = 10
 
 n = nrow(data)
 
-# downsample raster stack for testing
-predictor_stack_coarse <- terra::aggregate(predictor_stack, fact = 3)
 
 if (redo_bootstrap) {
   
+  # downsample raster stack for testing
+  # predictor_stack_coarse <- terra::aggregate(predictor_stack, fact = 3)
+
   for (b in seq(1,b_max)) {
     
     # progress report
@@ -568,7 +578,7 @@ if (redo_bootstrap) {
     
     # spatial prediction
     map_rf <- terra::predict(
-      object = predictor_stack_coarse, # what to predict from
+      object = predictor_stack, # what to predict from
       model  = rf_model,
       cores=4, # parallel processing
       cpkgs = "randomForest", # package needed to run prediction
@@ -576,7 +586,7 @@ if (redo_bootstrap) {
       overwrite = TRUE
       )
     map_cubist <- terra::predict(
-      object = predictor_stack_coarse, 
+      object = predictor_stack, 
       model  = cubist_model,
       cores=4,
       cpkgs = "Cubist", 
@@ -646,11 +656,17 @@ cub_mean_map_not_natura <- mask(cub_mean_map, natura, inverse=TRUE)
 - 
 
 ```{r accuracy-table}
-accuracies_summarized
+#| label: accuracy-table
+#| tbl-cap: "Accuracy metrics of the two models. Values indicate mean and standard deviation from the 10-fold cross-validation."
+
+knitr::kable(accuracies_summarized)
 ```
 
 
+
 ```{r plot-obs-vs-pred}
+#| label: plot-obs-vs-pred
+#| fig-cap: "Observed vs. predicted values for Random Forest and Cubist models. Predicted values are from out-of-box prediction during the 10-fold CV"
 
 # two-panel plot with RF and cubist
 
@@ -686,6 +702,8 @@ plot(cub_sd_map, main='Uncertainty map Cubist')
 
 
 ```{r plot-difference-map}
+#| label: difference-map
+#| fig-cap: "Difference map"
 
 # Define breakpoints and colors
 breaks <- c(minmax(diff_map)[1], -1, 1, minmax(diff_map)[2])
