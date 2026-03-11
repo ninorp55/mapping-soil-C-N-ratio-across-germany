@@ -8,8 +8,8 @@ execute: # set global chunk options
   echo: true # show code 
   warning: false # don't show warnings
   error: false # only render if no errors arise
-bibliography: references.bib # li
-csl: apa # citation style
+bibliography: references.bib 
+csl: https://www.zotero.org/styles/apa # citation style
 editor: visual
 knitr:
   opts_knit:
@@ -789,13 +789,6 @@ plot(vg_cn, plot.nu = TRUE)
 ## Predictor plots and histograms
 
 
-### Collinearity
-
-```{r}
-terra::layerCor(predictor_stack, fun='cor')
-```
-
-pH and SWC had a high (\>0.9) correlation.
 
 
 # References
