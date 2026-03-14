@@ -20,6 +20,10 @@ knitr:
 
 Comparison of Random Forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany accuracy measures, spatial patterns, variable importance
 
+# Abstract 
+
+max. 150 words
+
 # Introduction
 
 ## Why is C:N important?
@@ -68,6 +72,7 @@ library(geodata)
 library(spatstat) # for computing distance between sampling points
 library(ggplot2)
 library(patchwork)
+library(tidyterra)
 library(tidyverse)
 
 options(renv.config.startup.quiet = TRUE)
@@ -280,7 +285,7 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
   # dissimilarity (from ChatGPT)
   dissim_rast <- glcm(
     land_cover_rast,
-    window = c(5,5), # take only the 8 pixels forming the square directly around current pixel
+    window = c(5,5), # take the 5x5 pixels forming the square around current pixel (two layers)
     shift = list(c(1,0), c(0,1), c(1,1), c(-1,1)), # average 4 directions (up, down, left, right)
     statistics = "dissimilarity"
   )
@@ -526,9 +531,9 @@ accuracies_summarized <- accuracies %>%
 
 To evaluate whether the models' performance was significantly different, we conducted a paired T-test.
 ```{r paired-t-test}
-t.test(accuracies$R2 ~ accuracies$model)
+t.test(accuracies$R2 ~ accuracies$Model)
 
-t.test(accuracies$RMSE ~ accuracies$model)
+t.test(accuracies$RMSE ~ accuracies$Model)
 ```
 
 
@@ -538,14 +543,13 @@ To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosra
 
 ```{r bootstrapping}
 
-# TAKES LONG! only redo if something about data changed
+# TAKES LONG! only redo if something about data changed - otherwise files will be loaded from disk
 redo_bootstrap <- FALSE
 
 # set number of bootstrapping runs
-b_max = 10
+b_max = 30
 
 n = nrow(data)
-
 
 if (redo_bootstrap) {
   
@@ -656,7 +660,6 @@ cub_mean_map_not_natura <- mask(cub_mean_map, natura, inverse=TRUE)
 - 
 
 ```{r accuracy-table}
-#| label: accuracy-table
 #| tbl-cap: "Accuracy metrics of the two models. Values indicate mean and standard deviation from the 10-fold cross-validation."
 
 knitr::kable(accuracies_summarized)
@@ -665,7 +668,6 @@ knitr::kable(accuracies_summarized)
 
 
 ```{r plot-obs-vs-pred}
-#| label: plot-obs-vs-pred
 #| fig-cap: "Observed vs. predicted values for Random Forest and Cubist models. Predicted values are from out-of-box prediction during the 10-fold CV"
 
 # two-panel plot with RF and cubist
@@ -692,17 +694,63 @@ ggplot(cubist_preds, aes(obs, pred) ) +
 
 ## Maps
 
-```{r mean-and-uncertainty-maps}
-plot(rf_mean_map, main='Mean prediction Random Forest')
-plot(rf_sd_map, main='Uncertainty map Random Forest')
+```{r mean-maps}
 
-plot(cub_mean_map, main='Mean prediction Cubist')
-plot(cub_sd_map, main='Uncertainty map Cubist')
+# Determine shared limits
+zlim <- range(c(values(rf_mean_map), values(cub_mean_map)), na.rm = TRUE)
+
+p1 <- ggplot() +
+  geom_spatraster(data = rf_mean_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N") +
+  ggtitle("Random Forest") +
+  theme_minimal()
+
+p2 <- ggplot() +
+  geom_spatraster(data = cub_mean_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N") +
+  ggtitle("Cubist") +
+  theme_minimal()
+
+# Combine with patchwork, collecting the shared legend
+(p1 | p2) + plot_layout(guides = "collect")
+```
+
+```{r uncertainty-maps}
+
+# Determine shared limits
+zlim <- range(c(values(rf_sd_map), values(cub_sd_map)), na.rm = TRUE)
+
+p1 <- ggplot() +
+  geom_spatraster(data = rf_sd_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N standard deviation") +
+  ggtitle("Random Forest") +
+  theme_minimal()
+
+p2 <- ggplot() +
+  geom_spatraster(data = cub_sd_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N standard deviation") +
+  ggtitle("Cubist") +
+  theme_minimal()
+
+# Combine with patchwork, collecting the shared legend
+(p1 | p2) + plot_layout(guides = "collect")
+
+```
+
+
+
+
+```{r}
+mean(values(rf_sd_map), na.rm = TRUE)
+sd(values(rf_sd_map), na.rm = TRUE)
+
+mean(values(cub_sd_map), na.rm = TRUE)
+sd(values(cub_sd_map), na.rm = TRUE)
+
 ```
 
 
 ```{r plot-difference-map}
-#| label: difference-map
 #| fig-cap: "Difference map"
 
 # Define breakpoints and colors
@@ -757,6 +805,8 @@ boxplot(cbind(rf_natura, rf_not_natura, cub_natura, cub_not_natura))
 
 # Discussion
 
+// Diskussion (methodisch + inhaltlich + Literaturvergleich + Limitationen)
+
 ## Environmental predictors
 
 Identical to the results by @khosravani_soil_2026, pH was also by far the most important predictor in both our models.
@@ -769,6 +819,11 @@ A notable difference was the importance of NDVI. While @khosravani_soil_2026 had
 
 -   WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
 -   
+
+# Conclusion
+
+// Fazit (kurz, prägnant, 3–6 Sätze)
+
 
 # AI documentation
 
