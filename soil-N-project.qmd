@@ -20,28 +20,14 @@ knitr:
 
 Comparison of Random Forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany accuracy measures, spatial patterns, variable importance
 
+
 # Abstract
 
 max. 150 words
 
 # Introduction
 
-## Why is C:N important?
 
--   What does it tell you about the soil?
-
-## How is C:N changing?
-
--   What processes and factors affect it?
--   EU/Germany trends
-
-## Why DSM?
-
--   existing maps for EU/Germany
-    -   method
-    -   data
-    -   quality
-    -   challenges
 
 ## Fragestellung
 
@@ -51,9 +37,10 @@ Schlagwörter: - Random Forest - C:N ratio Stöchiometrie - systematischer Vergl
 
 How does spatial prediction of soil C:N stoichiometry across Germany differ when using a Random Forest model compared to a cubist approach?
 
-"ökologischer Plausibilitätscheck"
 
 # Methods
+
+The analysis was conducted using R statistical software (REF) integrated in Quarto (REF). We extensively used the packages terra, caret, tidyverse/dplyr, and ggplot (REF).
 
 ```{r load-packages}
 #| include: false
@@ -74,13 +61,11 @@ library(ggplot2)
 library(patchwork)
 library(tidyterra)
 library(tidyverse)
-
+library(glue)
 options(renv.config.startup.quiet = TRUE)
 ```
 
-## Study area
-
-The prediction of soil C:N was conducted for Germany. The shapefile of the administrative boundaries was obtained from `rnaturalearth` [@rnaturalearth].
+The prediction of soil C:N was conducted on the scale of Germany. The shapefile of the administrative boundaries was obtained from `rnaturalearth` [@rnaturalearth].
 
 ```{r load-germany-mask}
 
@@ -96,6 +81,12 @@ germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
 crs <- 'EPSG:25832'
 germany_4326 <- germany
 germany <- st_transform(germany, crs)
+
+# # load land cover data to analyze distribution
+# land_cover <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif') %>%
+#   crop(germany_4326) %>%
+#   project(crs, method='near')
+
 ```
 
 Germany has a highly heterogenous landscape...
@@ -117,10 +108,24 @@ lucas_eu <- st_transform(lucas_eu, crs)
 
 # subset to Germany
 lucas <- st_filter(lucas_eu, germany)
-
 ```
 
-The measurements of soil properties were obtained from the LUCAS topsoil survey 2015 (CITE). In Germany, it consisted of `r nrow(lucas)` samples. This data was used to calculate the C:N ratios by dividing soil organic carbon (SOC) by total nitrogen (N).
+```{r calculate-sampling-point-distance}
+
+# prepare point pattern with projection (required for distance)
+lucas_ppp <- as.ppp(lucas)
+
+# find distance to nearest neighbor for each point
+distances <- nndist(lucas_ppp)
+
+# summary statistics (in km2)
+mean_dist <- mean(distances)/1000
+sd_dist <- sd(distances)/1000
+min_dist <- min(distances)/1000
+max_dist <- max(distances)/1000
+```
+
+The measurements of soil properties were obtained from the LUCAS topsoil survey 2015 (CITE). In Germany, it consisted of `r nrow(lucas)` samples. Sampling points had a mean distance of `r round(mean_dist,2)` ± `r round(sd_dist,2)`, with minimum and maximum distances of `r round(min_dist,2)` and `r round(max_dist,2)`, respectively. This data was used to calculate the C:N ratios by dividing soil organic carbon (SOC) by total nitrogen (N).
 
 ```{r calculate-cn-ratio}
 #| fig-cap: "Distribution of C:N ratio values from LUCAS 2015 samples in Germany."
@@ -159,33 +164,13 @@ ggplot(lucas, aes(cn_ratio)) +
 
 ```
 
-The distribution of C:N ratios obtained this way was strongly right-skewed, with most values below 10. 
+The distribution of C:N ratios obtained this way was strongly right-skewed, with most values below 10 (Fig. XXX). There was one notable outlier at a ratio of almost 40, but we did not remove it because it helps increases the prediction range of the random forest algorithm. The extreme value most likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
 
-There was one notable outlier at a ratio of almost 40, but we did not remove it because it helps increases the prediction range of the random forest algorithm. The extreme value most likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
-
-
-```{r sampling-point-distance}
-#| output: false
-
-# prepare point pattern with projection (required for distance)
-lucas_ppp <- as.ppp(lucas)
-
-# find distance to nearest neighbor for each point
-distances <- nndist(lucas_ppp)
-
-# summary statistics (in km2)
-mean_dist <- mean(distances)/1000
-sd_dist <- sd(distances)/1000
-min_dist <- min(distances)/1000
-max_dist <- max(distances)/1000
-
-```
-
-Sampling points had a mean distance of `r round(mean_dist,2)` ± `r round(sd_dist,2)`, with minimum and maximum distances of `r round(min_dist,2)` and `r round(max_dist,2),`, respectively.
 
 ## Covariates
 
-The selection of environmental predictors was based on those proposed by @khosravani_soil_2026 who had identified them according to expert knowledge. We slightly modified them when not avoidable due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in TableXXX and in the following we describe all predictors more in detail.
+The selection of environmental predictors was largely based on those proposed by @khosravani_soil_2026, who had identified them according to expert knowledge. We slightly modified them when not avoidable due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in Table XXX and in the following we describe how we obtained and processed all predictors more in detail.
+
 
 | Abbreviation | Full name | Unit | Source |
 |----|----|----|----|
@@ -206,7 +191,6 @@ The selection of environmental predictors was based on those proposed by @khosra
 
 : Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
 
-
 Elevation data at a resolution of 250 m was obtained from the global Digital Elevation Model provided by (REF Hengl, https://zenodo.org/records/1447210). Since it matched the target resolution, this raster was chosen as the reference to which we reprojected all other layers. terra [@terra] was used  to derive the covariates slope, aspect, and latitude from this elevation data.
 
 The covariate layers temperature and precipitation were based on WorldClim [REF], which provides global climatic data at a 1km (??) resolution based on long-term monthly averages between 19XX and 20XX. We computed the mean annual temperature (ºC) and the total annual precipitation (mm).
@@ -221,7 +205,6 @@ dem <- rast('data/covariates/elevation/dtm_elevation_merit.dem_m_250m_s0..0cm_20
 slope <- terrain(dem, v = "slope", unit = "degrees")
 slope <-  project(slope, crs, method='bilinear') 
 
-
 # calculate aspect
 aspect <- terrain(dem, v = "aspect", unit = "degrees")
 
@@ -234,11 +217,7 @@ precip <- worldclim_country(country='germany', var='prec', path='data/covariates
 
 temp_annual <- mean(temp) # mean annual temperature
 precip_annual <- sum(precip) # total annual precipitation
-
-
 ```
-
-
 
 Land cover dissimilarity was based on the land cover classification by https://zenodo.org/records/3939038 (REF), which contains the 2015 global land cover at a 100 m resolution. To reduce computational demand, it was reprojected to the target resolution of 250 m via mode resampling. With this raster, we computed the statistic "dissimilarity" from image texture measures from grey-level co-occurrence matrices (GLCM), calculating dissimilarity across all direction using a 9x9 window (capturing the dissimilarity in a 2.25 km$^2$ square).
 
@@ -254,8 +233,6 @@ lc_dissim_path <- "data/covariates/lc_dissim.tif"
 land_cover <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif') %>%
   crop(germany_4326)
 
-# reproject to target resolution (100 -> 250 m) to speed up processing
-land_cover_250m <- project(land_cover, slope, method='mode') # via majority voting
 
 # obtain LC dissimilarity
 # check if file exists AND redo flag is FALSE --> just load existing raster
@@ -265,6 +242,9 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
   
 } else {
   
+  # reproject LC to target resolution (100 -> 250 m) to speed up processing
+  land_cover_250m <- project(land_cover, slope, method='mode') # via majority voting
+
   # transform to RasterLayer (from raster package) - required for glcm
   land_cover_rast <- raster(land_cover_250m)
   
@@ -324,13 +304,8 @@ average_rasters <- function(rast1_path, rast2_path, weight1 = 1/3, weight2 = 2/3
 }
 
 clay <- average_rasters('data/covariates/clay_0-5.tif', 'data/covariates/clay_5-15.tif')
-
-
 silt <- average_rasters('data/covariates/silt_0-5.tif', 'data/covariates/silt_5-15.tif') 
-
-# pH
-ph <- average_rasters('data/covariates/ph_0-5.tif', 'data/covariates/ph_5-15.tif') 
-
+ph <- average_rasters('data/covariates/ph_0-5.tif', 'data/covariates/ph_5-15.tif') / 10
 # soil water content (SWC)
 swc <- average_rasters('data/covariates/swc_0-5.tif', 'data/covariates/swc_5-15.tif')
 
@@ -339,7 +314,6 @@ s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
   crop(germany_4326)
 
 # human footprint (HFP)
-# hfp <- rast('data/covariates/Human_footprint_maps/hfp2013_merisINT.tif') 
 hfp <- rast('data/covariates/hfp2015.tif') 
 hfp <- crop(hfp, st_transform(germany, crs(hfp)))
 
@@ -349,6 +323,8 @@ ndvi <- rast('data/covariates/NDVI_Germany_2013_2015.tif')
 ```
 
 Once we had obtained the raster data for all predictors, we projected them to the same CRS (EPSG 25832, UTM 32N) and resolution using bilinear resampling. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
+
+To account for differences in land cover, we encoded four natural land cover types as dummy variables: cropland, forest, grassland (herbaceous), and cropland.
 
 From the resulting raster stack, we removed pixels corresponding to unsuitable land cover types (water bodies, snow, built-up land).
 
@@ -372,12 +348,10 @@ for (predictor in predictors) {
 # reproject land cover (categorical, therefore use different reprojection method)
 land_cover_reproj <- project(land_cover, slope, method='mode') # majority voting
 # predictor_stack <- append(predictor_stack, land_cover_reproj)
+# make factor and add to stack
+# land_cover_reproj_fact <- as.factor(land_cover_reproj)
+# predictor_stack <- append(predictor_stack, land_cover_reproj_fact)
 
-# adjust names
-names(predictor_stack) <- c('slope', 'elevation', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi')
-
-# mask with Germany (extract exact shape)
-predictor_stack <- mask(predictor_stack, germany)
 
 # # mask out certain land cover types
 # unsuitable_lc_classes <- c(
@@ -394,16 +368,19 @@ predictor_stack <- mask(predictor_stack, germany)
 # add dummy variables encoding major land cover types
 forest_codes <- c(111,112,113,114,115,116,121,122,123,124,125,126)
 forest <- land_cover_reproj %in% forest_codes  # returns binary raster (True/False)
-
 grassland <- land_cover_reproj == 30
 wetland <- land_cover_reproj == 90
 cropland <- land_cover_reproj == 40
 
-# add to predictor stack
+# add to predictor stack (multiply by one to make True to 1 and False to 0)
 predictor_stack <- c(predictor_stack, forest*1, grassland*1, wetland*1, cropland*1)
-names(predictor_stack) <- c(names(predictor_stack)[1:(length(names(predictor_stack))-4)], 'forest', 'grassland', 'wetland', 'cropland')
+# names(predictor_stack) <- c(names(predictor_stack)[1:(length(names(predictor_stack))-4)], 'forest', 'grassland', 'wetland', 'cropland')
 
-plot(predictor_stack)
+# adjust names
+names(predictor_stack) <- c('slope', 'elevation', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi', 'forest', 'grassland', 'wetland', 'cropland')
+
+# mask with Germany (extract exact shape)
+predictor_stack <- mask(predictor_stack, germany)
 
 ```
 
@@ -417,17 +394,14 @@ predictor_values <- terra::extract(predictor_stack, lucas)[,-1] # remove ID
 # combine with C:N data and remove unnecessary colums
 data <- cbind(lucas['cn_ratio'], predictor_values) %>%
   drop_na() %>% 
-  # select(!lc_class) %>%
+  # select(!lc_class2) %>%
   st_drop_geometry() 
 
 nrow(data)
 ```
 
-The reference paper by @khosravani_soil_2026 only used k-fold cross-validation for hyperparameter tuning and apparently calculated training and test based on a single split. We decided to implement a k-fold cross-validation (CV) for calculating the accuracy metrics as well, to obtain more robust estimates. In k-fold CV, the dataset is split into k folds, i.e., approximately equal partitions. We implemented this k-fold CV using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning for the parameter `mtry`, i.e., the number of predictors used at each split.
 
-Both the test set accuracy as well as the metrics obtained via CV evaluate the model performance when predicting from unseen data. We therefore decided to focus on the comparison of these two, leaving out training performance since it is much less directly relevant for assessing the model.
-
-CV also used for hyperparameter tuning, specifically to pick the optimal number for `mtry` which denotes the number of predictors to use at each split.
+We used k-fold cross-validation (CV) for hyperparameter tuning and estimating accuracy metrics. , to obtain more robust estimates. In k-fold CV, the dataset is split into k approximately equal parts ("folds"), and a model is iteratively fit on k-1 folds while the remaining fold is used for validation. The model accuracy metrics are then obtained by averaging the accuracy metrics for predictions (on the validation fold) across the folds. This CV approach offers a more robust estimate of model accuracy than a single training and testing split.
 
 ```{r rf-cross-validation}
 
@@ -451,13 +425,11 @@ rfModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
 rfModel
 ```
 
-Hyperparameter tuning via `caret` indicated that `mtry` `r rfModel$bestTune$mtry` had the lowest RMSE.
+We implemented this k-fold CV using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning for the parameter `mtry`, i.e., the number of predictors used at each split, and found the lowest Root Mean Squared Error (RMSE) for `mtry` = `r rfModel$bestTune$mtry`. The number of trees was set to 500.
 
 ## Cubist model
 
-While we originally wanted to compare our results from the random forest regression with the cubist predictions from @khosravani_soil_2026, we were not able to accurately replicate their methodology (particularly the covariate layer acquisition and preprocessing) due to gaps in documentation.
-
-We therefore implemented a cubist model ourselves, that was trained in the same way (10-fold CV) as the RF.
+The same 10-fold CV was applied for the Cubist model.
 
 ```{r cubist-cross-validation}
 
@@ -472,11 +444,11 @@ cubModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
 cubModel
 ```
 
-`r cubModel$bestTune$committees` committees and `r cubModel$bestTune$neighbors` neighbors led to the lowest RMSE.
+Hyperparameter tuning showed that `r cubModel$bestTune$committees` committees and `r cubModel$bestTune$neighbors` neighbors led to the lowest RMSE.
 
 ## Variable importance
 
-calculated from the best-fit model trained on all data after CV
+To obtain the relative variable importance scores, a random forest and a cubist model with the optimal hyperparameters were fit to the whole dataset. 
 
 ## Model performance
 
@@ -487,7 +459,7 @@ Following @khosravani_soil_2026, we evaluated the model accuracy based on four m
 -   concordance correlation coefficient (CCC), which quantifies the agreement between observed and predicted values
 -   Bias, which shows whether the model systematically over- or underestimates the target variable
 
-In the reference paper, it was poorly documented from which training and testing set(s) the accuracy metrics were obtained, so we followed the approach of @zhou_prediction_2021 and calculated them as the mean from 10-fold cross-validation to have more robust estimates of model accuracy.
+We followed the approach of @zhou_prediction_2021 and calculated accuracy metrics as the mean from the 10-fold cross-validation predictions to have more robust estimates of model accuracy.
 
 ```{r calculate-accuracy-measures}
 
@@ -528,28 +500,38 @@ accuracies <- rbind(rf_preds_accuracy, cubist_preds_accuracy)
 # average within each model across folds
 accuracies_summarized <- accuracies %>%
   group_by(Model) %>%
-  summarise(across(everything(), mean)) %>%
-  # add SD as well
-  select(!Resample)
+  # summarise(across(everything(), mean)) %>%
+  summarise(
+    across(where(is.numeric), mean, .names = "{.col}_mean"),
+    across(where(is.numeric), sd,   .names = "{.col}_sd")
+  ) %>%
+  # summarize in one column with ±
+  transmute(
+    Model = Model,
+    RMSE = glue("{round(RMSE_mean, 2)} ± {round(RMSE_sd, 2)}"),
+    R2 = glue("{round(R2_mean, 3)} ± {round(R2_sd, 2)}"),
+    Bias = glue("{round(Bias_mean, 2)} ± {round(Bias_sd, 2)}"),
+    CCC = glue("{round(CCC_mean, 2)} ± {round(CCC_sd, 3)}")
+  )
   
 ```
 
 To evaluate whether the models' performance was significantly different, we conducted a paired T-test.
 
 ```{r paired-t-test}
-t.test(accuracies$R2 ~ accuracies$Model)
+t_test_r2 <- t.test(accuracies$R2 ~ accuracies$Model)
 
-t.test(accuracies$RMSE ~ accuracies$Model)
+t_test_rmse <- t.test(accuracies$RMSE ~ accuracies$Model)
 ```
 
 ## Mapping
 
-To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosravani_soil_2026 did. Due to computational constraints, we used 30 iteration for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, we calculated the mean predicted C:N as well as uncertainty map based on the standard deviation. To investigate possible spatial patterns between the RF and Cubist predictions, we also computed a difference map by substracting the mean Cubist from the mean RF map.
+To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosravani_soil_2026 did. Due to computational constraints, we used 30 iterations for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data (representing apprximately XXX% of samples) and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, we calculated the mean predicted C:N as well as uncertainty map based on the standard deviation. To investigate possible spatial patterns between the RF and Cubist predictions, we also computed a difference map by substracting the mean cubist from the mean RF map.
 
 ```{r bootstrapping}
 
-# TAKES LONG! only redo if something about data changed - otherwise files will be loaded from disk
-redo_bootstrap <- TRUE
+# TAKES LONG (around 4 hours)! only redo if something about data changed - otherwise files will be loaded from disk (if available)
+redo_bootstrap <- FALSE
 
 # set number of bootstrapping runs
 b_max = 30
@@ -634,12 +616,15 @@ e.g., https://www.sciencedirect.com/science/article/pii/S0048969720361908 create
 
 ## Ecological plausibility
 
-To illustrate a possible use case for C:N maps, we tested whether
+To illustrate a possible use case for C:N maps, we tested whether predicted C:N ratios in grasslands were significantly higher if they were located in protected areas. 
 
 For this purpose, we used a shapefile of Natura 2000 areas obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4.
 
-```{r load-natura-2000}
+We used a separate grassland map from XXX since the land cover we used did not have it as a distinct class.
 
+```{r prepare-natura-grassland-df}
+
+# load Natura 2000 shapefile
 natura_vect <- vect('data/SHP/Natura2000_end2024_epsg3035.shp') %>%
   project(crs) %>%
   crop(germany)
@@ -647,11 +632,7 @@ natura_vect <- vect('data/SHP/Natura2000_end2024_epsg3035.shp') %>%
 # rasterize
 natura <- rasterize(natura_vect, slope, background=0, field=1)
 
-
-```
-
-```{r load-grassland}
-
+# load grassland raster
 grassland_eu <- rast('data/GRA_2015_100m_eu_03035_V1_2.tif')
 
 # crop
@@ -659,11 +640,10 @@ grassland_ger <- grassland_eu %>%
   crop(st_transform(germany, crs(grassland_eu)))
 
 # make binary raster (1 where grassland, 0 all others)
-grassland_ger_binary <- grassland_ger == 1
+grassland_ger <- grassland_ger == 1
 
 # reproject to match raster stack grid (250 m) using mode resampling --> only classify as grassland if majority of 100 pixels are grassland 
-grassland <- project(grassland_ger_binary, slope, method='mode')
-
+grassland_ger <- project(grassland_ger, slope, method='mode')
 
 # function to mask rasters by grassland and natura, and convert to dataframe
 # function developed by Claude Sonnet 4.6
@@ -703,10 +683,11 @@ create_cn_boxplot_df <- function(cn_raster1, cn_raster2,
 grass_natura_df <- create_cn_boxplot_df(
   cn_raster1       = rf_mean_map,
   cn_raster2       = cub_mean_map,
-  grassland_raster = grassland,
+  grassland_raster = grassland_ger,
   natura_raster    = natura,
   model_names      = c("RF", "Cubist")
-)
+) %>%
+  filter(grassland == TRUE)
 ```
 
 # Results
@@ -755,8 +736,10 @@ p2 <- ggplot(cubist_preds, aes(obs, pred) ) +
 ```
 
 ```{r correlation-rf-cubist}
-cor(arrange(rfModel$pred, rowIndex)['pred'], arrange(cubModel$pred, rowIndex)['pred'])
+corr_rf_cub <- cor(arrange(rfModel$pred, rowIndex)['pred'], arrange(cubModel$pred, rowIndex)['pred'])
 ```
+
+Random forest and cubist predictions had a correlation coefficient of `r round(corr_rf_cub,3)`.
 
 ## Maps
 
@@ -819,7 +802,6 @@ With a mean standard deviation of `r round(mean_sd_rf, 2)` ± `r round(sd_sd_rf,
 Most extreme standard deviation in the Cubist map were located where the random forest did not make predictions due to missing data, mostly where large water bodies are found.
 
 
-
 ```{r plot-difference-map}
 #| fig-cap: "Difference map"
 
@@ -840,34 +822,74 @@ plot(diff_map, breaks = breaks, col = colors, legend = TRUE)
 #   theme_minimal()
 
 ```
+ 
+ Red (negative values) indicates that cubist prediction > RF prediction, whereas blue (positive values) indicates higher RF predictions.
 
+A simple correlation matrix (see Appendix) showed no large correlation between either relative(??? with + or -) or absolute difference and any of the predictors. Absolute difference were moderately linearly correlated with standard deviation (r = 0.37 for RF and r = 0.27 for cubist).
 
+```{r predictions-by-land-cover}
+
+grassland_preds <- mask(rf_mean_map, subst(grassland, 0, NA))
+forest_preds <- mask(rf_mean_map, subst(forest, 0, NA))
+crop_preds <- mask(rf_mean_map, subst(cropland, 0, NA))
+wetland_preds <- mask(rf_mean_map, subst(wetland, 0, NA))
+
+boxplot(cbind(values(grassland_preds), values(forest_preds), values(crop_preds), values(wetland_preds)))
+
+grassland_uncert <- mask(rf_sd_map, subst(grassland, 0, NA))
+forest_uncert <- mask(rf_sd_map, subst(forest, 0, NA))
+crop_uncert <- mask(rf_sd_map, subst(cropland, 0, NA))
+wetland_uncert <- mask(rf_sd_map, subst(wetland, 0, NA))
+
+```
+
+grassland mean uncertainty `r mean(grassland_uncert, na.rm = TRUE)` ± `r sd(grassland_uncert, na.rm = TRUE)`
+
+forest mean uncertainty `r mean(forest_uncert, na.rm = TRUE)` ± `r sd(forest_uncert, na.rm = TRUE)`
+
+crop mean uncertainty `r mean(crop_uncert, na.rm = TRUE)` ± `r sd(crop_uncert, na.rm = TRUE)`
+
+wetland mean uncertainty `r mean(wetland_uncert, na.rm = TRUE)` ± `r sd(wetland_uncert, na.rm = TRUE)`
 
 ```{r}
 
+lucas_pred <- terra::extract(c(rf_mean_map, cub_mean_map, rf_sd_map, cub_sd_map), lucas)[,-1] %>%
+  cbind(lucas[c('cn_ratio', 'LC0_Desc')]) %>%
+  rename(
+    rf_mean = mean,
+    cub_mean = mean.1,
+    rf_sd = sd,
+    cub_sd = sd.1,
+    land_cover = LC0_Desc
+  ) %>%
+  mutate(
+    rf_resid = cn_ratio - rf_mean,
+    cub_resid = cn_ratio - cub_mean
+  )
 
-corr_rasters <- c(predictor_stack, rf_mean_map, rf_sd_map, cub_mean_map, cub_sd_map, diff_map, diff_map_abs)
+lucas_pred_long <- lucas_pred %>%
+  pivot_longer(
+    cols         = c(rf_mean, cub_mean, rf_resid, cub_resid, rf_sd, cub_sd),
+    names_to     = c("model", ".value"),
+    names_pattern = "(.+)_(mean|resid|sd)"
+  )
 
-names(corr_rasters) <- c(names(predictor_stack), 'rm_mean', 'rf_sd', 'cub_mean', 'cub_sd', 'diff', 'abs_diff')
+ggplot(lucas_pred_long, aes(x=model, y=mean, fill = model)) +
+  geom_boxplot() +
+  facet_wrap(~land_cover)
 
-# correlation matrix
-# cor_mat <- layerCor(corr_rasters, fun = "cor", na.rm = TRUE)
+ggplot(lucas_pred_long, aes(x=model, y=sd, fill = model)) +
+  geom_boxplot() +
+  facet_wrap(~land_cover)
 
-# sample to reduce processing time
-corr_rasters_samp <- spatSample(corr_rasters, size = 1e4, method = "random", na.rm = TRUE, as.df = TRUE)
-
-cor(corr_rasters_samp)
+ggplot(lucas_pred_long, aes(x=model, y=resid, fill = model)) +
+  geom_boxplot() +
+  facet_wrap(~land_cover)
 
 ```
-
-
-
 
 ## Variable importance
 
-```{r plot-variable-importance}
-varImpPlot(rfModel$finalModel, main = "Predictor Importance Random Forest")
-```
 
 ```{r variable-importance}
 
@@ -908,66 +930,31 @@ ggplot(imp_df, aes(variable, importance, fill=model)) +
   ylab('Relative importance [%]')
 ```
 
-## Evaluation
+Ph was by far the most important predictor in both models. NDVI was ranked second for both.
 
-### Summary statistics of predicted C:N by land cover class
+The least important numeric predictors were soil respiration and aspect. 
 
-### Ecological plausibility
+
+
+## Ecological plausibility
 
 ```{r compare-natura-boxplot}
 
-grass_natura_df <- grass_natura_df %>%
-  mutate(label = case_when(
-     grassland &  protected ~ "Grassland & Protected",
-    !grassland &  protected ~ "Other & Protected",
-     grassland & !protected ~ "Grassland & Unprotected",
-    !grassland & !protected ~ "Other & Unprotected"
-  )) #%>% factor(levels = c(
-  #   "Grassland & Protected",
-  #   "Grassland & Unprotected",
-  #   "Other & Protected",
-  #   "Other & Unprotected"
-  # )))
 
-ggplot(grass_natura_df, aes(label, cn_ratio, fill = model)) +
+ggplot(grass_natura_df, aes(protected, cn_ratio, fill = model)) +
   geom_boxplot() 
 
-```
+grass_natura_df_rf <- filter(grass_natura_df, grass_natura_df$model == 'RF')
 
-```{r}
+# anova_rf <- aov(cn_ratio ~ protected, data = grass_natura_df_rf)
+# summary(anova_rf)
 
-lucas_pred <- terra::extract(c(rf_mean_map, cub_mean_map, rf_sd_map, cub_sd_map), lucas)[,-1] %>%
-  cbind(lucas[c('cn_ratio', 'LC0_Desc')]) %>%
-  rename(
-    rf_mean = mean,
-    cub_mean = mean.1,
-    rf_sd = sd,
-    cub_sd = sd.1,
-    land_cover = LC0_Desc
-  ) %>%
-  mutate(
-    rf_resid = cn_ratio - rf_mean,
-    cub_resid = cn_ratio - cub_mean
-  )
+# Mann–Whitney U
+wilcox.test(cn_ratio ~ protected, data = grass_natura_df_rf)
 
-lucas_pred_long <- lucas_pred %>%
-  pivot_longer(
-    cols         = c(rf_mean, cub_mean, rf_resid, cub_resid, rf_sd, cub_sd),
-    names_to     = c("model", ".value"),
-    names_pattern = "(.+)_(mean|resid|sd)"
-  )
-
-ggplot(lucas_pred_long, aes(x=model, y=mean, fill = model)) +
-  geom_boxplot() +
-  facet_wrap(~land_cover)
-
-ggplot(lucas_pred_long, aes(x=model, y=sd, fill = model)) +
-  geom_boxplot() +
-  facet_wrap(~land_cover)
-
-ggplot(lucas_pred_long, aes(x=model, y=resid, fill = model)) +
-  geom_boxplot() +
-  facet_wrap(~land_cover)
+# get effect size
+library(effsize)
+cliff.delta(cn_ratio ~ protected, data = df)
 
 ```
 
@@ -1018,6 +1005,71 @@ A controversial (?) and surprising choice by @khosravani_soil_2026 was to includ
 
 # Appendix
 
+## Predictor maps
+
+```{r}
+plot(predictor_stack)
+```
+
+
+```{r plot-predictor-stack}
+#| eval: false
+
+
+# set up plot grid
+par(mfrow = c(3, 6)) 
+
+# define units
+units <- list(
+  slope = "°",
+  elevation = "m",
+  aspect = "°",
+  mean_temp = "°C",
+  total_precip = "mm",
+  latitude = "°",
+  lc_dissim = "none",
+  clay = "g/kg",
+  silt = "g/kg",
+  ph = "none",
+  swc = "???",
+  r_resp = "???",
+  hfp = "none",
+  ndvi = "none"
+)
+
+for (i in 1:nlyr(predictor_stack)) {
+  
+  r <- predictor_stack[[i]]
+  nm <- names(r)
+
+  vals <- values(r)
+  
+  if (all(vals %in% c(0,1), na.rm = TRUE)) {
+    # boolean layer
+    plot(
+      r,
+      main = paste0(nm),
+      col = c("lightgrey", "darkgreen"),
+      breaks = c(-0.5, 0.5, 1.5)#,
+      # plg = list(at = c(0,1), labels = c("False","True"))
+    )
+    
+  } else {
+    # continuous layer
+    rmin <- minmax(r)[1]
+    rmax <- minmax(r)[2]
+    
+    plot(
+      r,
+      main = paste0(nm, " [", units[nm], "]"),
+      col = hcl.colors(50, "viridis"),
+      plg = list(at = c(rmin, rmax), labels = round(c(rmin, rmax), 2))
+    )
+  }
+}
+```
+
+
 ## Spatial autocorrelation C:N
 
 ```{r c-n-experimental-variogram}
@@ -1038,6 +1090,22 @@ plot(vg_cn, plot.nu = TRUE)
 
 --\> spatial autocorrelation only to distance of \~7.5km and only small fraction of points have other points within this distance (especially when trying variogram with smaller cloud classes), so geostatistical approaches such as kriging not ideal
 
-## Predictor plots and histograms
+## Correlation matrix
+
+```{r explore-correlation}
+
+corr_rasters <- c(predictor_stack, rf_mean_map, rf_sd_map, cub_mean_map, cub_sd_map, diff_map, diff_map_abs)
+
+names(corr_rasters) <- c(names(predictor_stack), 'rm_mean', 'rf_sd', 'cub_mean', 'cub_sd', 'diff', 'abs_diff')
+
+# correlation matrix
+# cor_mat <- layerCor(corr_rasters, fun = "cor", na.rm = TRUE)
+
+# sample to reduce processing time
+corr_rasters_samp <- spatSample(corr_rasters, size = 1e4, method = "random", na.rm = TRUE, as.df = TRUE)
+
+cor(corr_rasters_samp)
+
+```
 
 # References
