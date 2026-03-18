@@ -841,17 +841,45 @@ forest_uncert <- mask(rf_sd_map, subst(forest, 0, NA))
 crop_uncert <- mask(rf_sd_map, subst(cropland, 0, NA))
 wetland_uncert <- mask(rf_sd_map, subst(wetland, 0, NA))
 
+show_mean_sd <- function(raster) {
+  raster_val <- values(raster)
+  mean_val <- mean(raster_val, na.rm = TRUE)
+  sd_val <- sd(raster_val, na.rm = TRUE)
+  return(paste(round(mean_val, 2), '±', round(sd_val,2)))
+}
+
 ```
 
-grassland mean uncertainty `r mean(grassland_uncert, na.rm = TRUE)` ± `r sd(grassland_uncert, na.rm = TRUE)`
+random forest:
 
-forest mean uncertainty `r mean(forest_uncert, na.rm = TRUE)` ± `r sd(forest_uncert, na.rm = TRUE)`
+grassland mean uncertainty `r show_mean_sd(grassland_uncert)`
 
-crop mean uncertainty `r mean(crop_uncert, na.rm = TRUE)` ± `r sd(crop_uncert, na.rm = TRUE)`
+forest mean uncertainty `r show_mean_sd(forest_uncert)`
 
-wetland mean uncertainty `r mean(wetland_uncert, na.rm = TRUE)` ± `r sd(wetland_uncert, na.rm = TRUE)`
+crop mean uncertainty `r show_mean_sd(crop_uncert)`
+
+wetland mean uncertainty `r show_mean_sd(wetland_uncert)`
 
 ```{r}
+grassland_uncert <- mask(cub_sd_map, subst(grassland, 0, NA))
+forest_uncert <- mask(cub_sd_map, subst(forest, 0, NA))
+crop_uncert <- mask(cub_sd_map, subst(cropland, 0, NA))
+wetland_uncert <- mask(cub_sd_map, subst(wetland, 0, NA))
+```
+
+cubist:
+
+grassland mean uncertainty `r show_mean_sd(grassland_uncert)`
+
+forest mean uncertainty `r show_mean_sd(forest_uncert)`
+
+crop mean uncertainty `r show_mean_sd(crop_uncert)`
+
+wetland mean uncertainty `r show_mean_sd(wetland_uncert)`
+
+
+```{r}
+#| eval: false
 
 lucas_pred <- terra::extract(c(rf_mean_map, cub_mean_map, rf_sd_map, cub_sd_map), lucas)[,-1] %>%
   cbind(lucas[c('cn_ratio', 'LC0_Desc')]) %>%
@@ -954,11 +982,11 @@ wilcox.test(cn_ratio ~ protected, data = grass_natura_df_rf)
 
 # get effect size
 library(effsize)
-cliff.delta(cn_ratio ~ protected, data = df)
+cliff.delta(cn_ratio ~ protected, data = grass_natura_df_rf)
 
 ```
 
-
+significantly higher C:N in protected grassland (Mann–Whitney U, p < 0.01), though with small effect size (Cliff's Delta -0.167)
 
 # Discussion
 
