@@ -709,7 +709,9 @@ grass_natura_df <- create_cn_boxplot_df(
 
 In order to compare the differences statistically, a Mann-Whitney U test was conducted to test for significance, and Cliff's Delta was calculated to obtain the effect size. For the latter, a random subset of 10,000 protected and unprotected pixels each was used due to computational limitations.
 
-```{r stat-tests-grassland-natura}
+```{r}
+#| label: stat-tests-grassland-natura
+
 
 ### for random forest
 
@@ -1111,58 +1113,6 @@ We used the tools listed below as supportive tools for the following purposes:
 
 # Appendix
 
-## Predictor maps
-
-
-```{r predictor-variable-ranges}
-
-num_layers <- which(!sapply(1:nlyr(predictor_stack), function(i) is.logical(values(predictor_stack[[i]])[1])))
-
-
-stats <- global(predictor_stack[[1:14]], fun = c("mean", "sd", "min", "max"), na.rm = TRUE)
-
-r_num <- predictor_stack[[1:14]]
-  
-# compute raster stats
-r_stats <- data.frame(
-  variable = names(r_num),
-  mean   = global(r_num, "mean", na.rm = TRUE)[,1],
-  median = global(r_num, median, na.rm = TRUE)[,1],
-  min    = global(r_num, "min", na.rm = TRUE)[,1],
-  max    = global(r_num, "max", na.rm = TRUE)[,1],
-  sd     = global(r_num, "sd", na.rm = TRUE)[,1]
-) %>%
-  mutate(source = "raster")
-
-# compute point stats
-pt_stats <- data %>%
-  select(all_of(names(r_num))) %>%
-  summarise(across(
-    all_of(names(r_num)),
-    list(
-      mean = ~mean(.x, na.rm = TRUE),
-      median = ~median(.x, na.rm = TRUE),
-      min = ~min(.x, na.rm = TRUE),
-      max = ~max(.x, na.rm = TRUE),
-      sd = ~sd(.x, na.rm = TRUE)
-    )
-  )) %>%
-  pivot_longer(
-    everything(),
-    names_to = c("variable", ".value"),
-    names_pattern = "(.+)_(mean|median|min|max|sd)"
-  ) %>%
-  mutate(source = "sampling points")
-
-# combine in one df
-combined_stats <- bind_rows(r_stats, pt_stats) %>%
-  arrange(variable, source)
-
-knitr::kable(combined_stats, digits = 2)
-```
-
-
-
 
 ```{r}
 #| label: fig-plot-predictor-stack
@@ -1249,55 +1199,15 @@ wrap_plots(plots, ncol = 4)
 #| label: tbl-accuracy-by-fold
 #| tbl-cap: "Accuracy metrics by fold and by model"
 
-knitr::kable(accuracies, digits = 3)
+accuracies <- accuracies %>%
+  rownames_to_column("Fold") %>%
+  mutate(Fold = as.integer(gsub("Fold", "", Fold))) %>%
+  select(-Resample) %>%
+  mutate(Model = ifelse(duplicated(Model), "", Model)) %>% # keep model name only in first row
+  select(Model, everything()) # put Model as first column
+
+knitr::kable(accuracies, digits = 3) 
 ```
 
-
-## Observed vs. predicted distributions
-
-```{r}
-data_preds <-  terra::extract(c(rf_mean_map, cub_mean_map), lucas) %>%
-  cbind(data$cn_ratio)
-
-names(data_preds) <- c('ID', 'rf_mean', 'cub_mean', 'measured')
-
-data_long <- data_preds %>%
-  select(-ID) %>%
-  pivot_longer(cols = everything(),
-               names_to = "source",
-               values_to = "value")
-
-ggplot(data_long, aes(x = source, y = value, fill = source)) +
-  geom_boxplot() +
-  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "white") +
-  theme_minimal() +
-  labs(x = "", y = "C:N ratio")
-```
-
-
-
-
-```{r table-cn-range-comparison}
-
-labels <- c('Measured', 'RF predicted (sampling)', 'cubist predicted (sampling)', 'RF predicted (complete)', 'cubist predicted (complete)')
-
-mins <- c(min(data$cn_ratio), min(rf_preds$pred), min(cubist_preds$pred), min(values(rf_mean_map), na.rm = TRUE),  min(values(cub_mean_map), na.rm = TRUE))
-
-maxs <- c(max(data$cn_ratio), max(rf_preds$pred), max(cubist_preds$pred), max(values(rf_mean_map), na.rm = TRUE),  max(values(cub_mean_map), na.rm = TRUE))
-
-means <- c(mean(data$cn_ratio), mean(rf_preds$pred), mean(cubist_preds$pred), mean(values(rf_mean_map), na.rm = TRUE),  mean(values(cub_mean_map), na.rm = TRUE))
-
-sds <- c(sd(data$cn_ratio), sd(rf_preds$pred), sd(cubist_preds$pred), sd(values(rf_mean_map), na.rm = TRUE),  sd(values(cub_mean_map), na.rm = TRUE))
-
-cn_range_comp <- tibble(
-  Source = labels,
-  Minimum = mins,
-  Maximum = maxs,
-  Mean = means,
-  SD = sds
-)
-
-knitr::kable(cn_range_comp)
-```
 
 
