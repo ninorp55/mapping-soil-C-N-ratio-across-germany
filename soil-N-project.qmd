@@ -1,12 +1,19 @@
 ---
-title: "Digital soil mapping of C:N ratio across Germany"
-author: "Ullrike XXX & Nina Preußler"
+title: "Comparison of random forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany"
+author: "Ulrike Krenz & Nina Preußler"
+date: March 19, 2026
 format:
   html:
     self-contained: true 
+    toc: true
+    toc-depth: 3     
+    number-sections: true
   pdf:
     execute:
       echo: false # don't show code in PDF
+      toc: true
+      toc-depth: 3     
+      number-sections: true
 execute: # set global chunk options
   echo: true # show code (by default for HTML)
   warning: false # don't show warnings
@@ -20,14 +27,21 @@ knitr:
     root.dir: "~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project" # working directory
 ---
 
-# Title
+**Course:** Boden und Umweltwandel  
+**Instructor:** Michael Seidel 
+**University:** University of Leipzig 
 
-Comparison of Random Forest and cubist machine learning for spatial prediction of soil C:N stoichiometry across Germany accuracy measures, spatial patterns, variable importance
-
+{{< pagebreak >}}
 
 # Abstract
 
 max. 150 words
+
+{{< pagebreak >}}
+
+\tableofcontents
+
+{{< pagebreak >}}
 
 # Introduction
 
@@ -52,21 +66,14 @@ Beyond statistical performance, interpreting spatial prediction maps requires ev
 
 Against this background, important gaps remain. Systematic comparisons of machine-learning algorithms for predicting soil C:N ratios at national scale are still limited, particularly in Europe. In addition, the ecological plausibility of predicted patterns is not consistently evaluated, and grassland systems remain underrepresented as independent validation contexts.
 
-The present study therefore investigates the spatial prediction of soil C:N ratios across Germany using two machine-learning algorithms. Soil C:N ratios derived from the LUCAS soil database were modelled using Random Forest and Cubist based on a harmonized set of environmental predictors. The resulting prediction maps were compared with respect to model performance, spatial prediction patterns and covariate effects. In addition, the ecological plausibility of predicted patterns was assessed by comparing modelled C:N ratios of grassland soils within and outside Natura 2000 protected areas as a proxy for management intensity.
+The present study therefore investigates the spatial prediction of soil C:N ratios across Germany using two machine learning algorithms. Soil C:N ratios derived from the LUCAS soil database were modelled using random forest and cubist machine learning based on a harmonized set of 15 environmental predictors. The resulting prediction maps were compared with respect to model performance, variable importance, as well as spatial prediction patterns. In addition, the ecological plausibility of predicted patterns was assessed by comparing modeled C:N ratios of grassland soils within and outside Natura 2000 protected areas as a proxy for management intensity.
 
 
-## Fragestellung
-
--   methodische Gap: keine Random Forest prediction in Deutschland
-
-Schlagwörter: - Random Forest - C:N ratio Stöchiometrie - systematischer Vergleich - accuracy (Genauigkeit?) - spatial patterns (z.B. Boxplot nach land cover, elevation; visueller Eindruck, hotspots) - Variablen (importance, partial dependence)
-
-How does spatial prediction of soil C:N stoichiometry across Germany differ when using a Random Forest model compared to a cubist approach?
-
+{{< pagebreak >}}
 
 # Methods
 
-The analysis was conducted using R statistical software (REF) integrated in Quarto (REF). We extensively used the packages terra, caret, tidyverse/dplyr, and ggplot (REF).
+The analysis was conducted using R statistical software [v4.5.2; @r_cite] integrated in Quarto [@Allaire_Quarto_2025]. We extensively used the packages terra [@terra], caret [@caret], and tidyverse [@tidyverse].
 
 ```{r setup}
 #| include: false
@@ -90,7 +97,10 @@ library(tidyterra)
 library(tidyverse)
 library(glue)
 
-# function for displaying as mean ± sd
+# don't show terra progress bar
+terra::terraOptions(progress = 0)
+
+# function for displaying raster summary as mean ± sd
 show_mean_sd <- function(raster) {
   raster_val <- values(raster)
   mean_val <- mean(raster_val, na.rm = TRUE)
@@ -116,11 +126,6 @@ crs <- 'EPSG:25832'
 germany_4326 <- germany
 germany <- st_transform(germany, crs)
 
-# # load land cover data to analyze distribution
-# land_cover <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif') %>%
-#   crop(germany_4326) %>%
-#   project(crs, method='near')
-
 ```
 
 
@@ -129,7 +134,9 @@ germany <- st_transform(germany, crs)
 ```{r load-lucas-data}
 
 # load LUCAS topsoil data
-lucas_eu <- st_read('data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp')
+lucas_eu <- suppressMessages(
+  sf::st_read('data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp')
+)
 
 # reproject
 lucas_eu <- st_transform(lucas_eu, crs)
@@ -757,6 +764,8 @@ sample_df <- grass_natura_df_cub %>%
 cliff_cub <- cliff.delta(cn_ratio ~ protected, data = sample_df)
 ```
 
+{{< pagebreak >}}
+
 # Results
 
 ## Model performance
@@ -1019,6 +1028,8 @@ ggplot(grass_natura_df, aes(protected, cn_ratio, fill = model)) +
 
 Both models predicted slightly higher C:N ratios in Natura 2000 protected grasslands than in unprotected grasslands (Fig. @fig-natura-boxplot). The difference in means was slightly higher for RF (`r round(summary_df$mean[4] - summary_df$mean[3],2)`) than for cubist (`r round(summary_df$mean[2] - summary_df$mean[1],2)`). The differences were found to be significant in both models (Mann–Whitney U, p < 0.01), but with a small effect size for random forest (Cliff's Delta `r round(cliff_rf$estimate, 3)`) and negligible effect size for cubist (Cliff's Delta `r round(cliff_cub$estimate, 3)`).
 
+{{< pagebreak >}}
+
 # Discussion
 
 ## Model performance
@@ -1085,12 +1096,15 @@ A key limitation underlying both spatial patterns and uncertainty structures is 
 
 Overall, the results indicate that uncertainty should not be treated merely as a residual modelling artefact but as an informative component of spatial prediction. Areas of high uncertainty and strong model disagreement can serve as priority targets for improved sampling and model refinement, particularly in environmentally complex regions where current predictions are most constrained.
 
+{{< pagebreak >}}
 
 # Conclusion
 
 // Fazit (kurz, prägnant, 3–6 Sätze)
 
 -   importance of accurate documentation and ideally sharing code for reproducibility
+
+{{< pagebreak >}}
 
 # Contributions
 
@@ -1115,6 +1129,11 @@ Nina Preußler
 - improve and customize plots
 - restructure data and extract values
 
+{{< pagebreak >}}
+
+# References
+
+{{< pagebreak >}}
 
 # Appendix
 
@@ -1331,4 +1350,3 @@ knitr::kable(cn_range_comp)
 ```
 
 
-# References
