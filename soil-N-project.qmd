@@ -27,8 +27,10 @@ knitr:
     root.dir: "~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project" # working directory
 ---
 
-**Course:** Boden und Umweltwandel  
+**Module:** Boden und Umweltwandel  
+
 **Instructor:** Michael Seidel 
+
 **University:** University of Leipzig 
 
 {{< pagebreak >}}
@@ -45,22 +47,21 @@ max. 150 words
 
 # Introduction
 
-The soil carbon-to-nitrogen (C:N) ratio is a widely used indicator of soil biogeochemical functioning because it reflects the balance between carbon and nitrogen in soil organic matter and is closely linked to nutrient cycling processes [@cleveland_cnp_2007, @sardans_cnp_2012] (Cleveland & Liptzin, 2007; Sardans et al., 2012). Changes in soil C:N ratios influence microbial nutrient demand, decomposition dynamics and nitrogen mineralization, thereby shaping soil organic matter turnover and broader ecosystem functioning [@cleveland_cnp_2007, @springob_bulk_2003] (Cleveland & Liptzin, 2007; Springob & Kirchmann, 2003). For this reason, the C:N ratio is frequently used as an indicator of soil organic matter quality and nutrient availability across terrestrial ecosystems [@ostrowska_assessment_2015, @springob_bulk_2003] (Ostrowska et al., 2015; Springob & Kirchmann, 2003). Understanding how soil C:N ratios vary across space is therefore essential for analysing large-scale patterns of soil functioning and nutrient cycling.
+The soil carbon-to-nitrogen (C:N) ratio is a widely used indicator of soil biogeochemical functioning because it reflects the balance between carbon and nitrogen in soil organic matter and is closely linked to nutrient cycling processes [@cleveland_cnp_2007; @sardans_cnp_2012]. Changes in soil C:N ratios influence microbial nutrient demand, decomposition dynamics and nitrogen mineralization, thereby shaping soil organic matter turnover and broader ecosystem functioning [@cleveland_cnp_2007; @springob_bulk_2003]. For this reason, the C:N ratio is frequently used as an indicator of soil organic matter quality and nutrient availability across terrestrial ecosystems [@ostrowska_assessment_2015; @springob_bulk_2003]. Understanding how soil C:N ratios vary across space is therefore essential for analysing large-scale patterns of soil functioning and nutrient cycling.
 
-Spatial modelling provides a framework to analyse such variation beyond sampled locations by linking measured soil properties with spatially explicit environmental covariates representing soil-forming factors and environmental gradients [@mcbratney_digital_2003, @wadoux_machine_2020] (McBratney et al., 2003; Wadoux et al., 2020). In the context of soil stoichiometry, spatial prediction enables the identification of relationships between C:N ratios and environmental drivers such as climate, topography, soil properties and land use [@hong_path_2026, @sardans_cnp_2012] (Hong et al., 2025; Sardans et al., 2012). Mapping these relationships allows the investigation of how environmental gradients shape spatial patterns of soil carbon and nitrogen dynamics across landscapes and regions.
+Spatial modelling provides a framework to analyse such variation beyond sampled locations by linking measured soil properties with spatially explicit environmental covariates representing soil-forming factors and environmental gradients [@mcbratney_digital_2003; @wadoux_machine_2020]. In the context of soil stoichiometry, spatial prediction enables the identification of relationships between C:N ratios and environmental drivers such as climate, topography, soil properties and land use [@hong_path_2026; @sardans_cnp_2012]. Mapping these relationships allows the investigation of how environmental gradients shape spatial patterns of soil carbon and nitrogen dynamics across landscapes and regions.
 
-Spatial prediction of soil C:N ratios typically relies on laboratory-derived soil observations from georeferenced sampling sites that serve as ground-truth data for model calibration and validation within digital soil mapping approaches [@mcbratney_digital_2003, @wadoux_machine_2020] (McBratney et al., 2003; Wadoux et al., 2020). The LUCAS soil survey represents one of the most widely used datasets for large-scale soil modelling in Europe, providing harmonised measurements of soil organic carbon, total nitrogen and related soil properties across the European Union [@orgiazzi_lucas_2018, @hong_path_2026] (Orgiazzi et al., 2018; Hong et al., 2025). These observations are commonly combined with environmental covariates representing major environmental gradients controlling soil carbon and nitrogen dynamics, including terrain attributes derived from digital elevation models, climatic variables, soil maps, land-use layers and remotely sensed predictors such as vegetation indices or radar observations [@wadoux_machine_2020, @khaledian_selecting_2020] (Wadoux et al., 2020; Khaledian & Miller, 2020). The increasing integration of remote sensing data into soil modelling is further illustrated by recent continental-scale studies combining LUCAS observations with multi-source satellite data to predict spatial patterns of soil C:N ratios [@wang_mapping_2025] (Wang et al., 2025).
+Spatial prediction of soil C:N ratios typically relies on laboratory-derived soil observations from georeferenced sampling sites that serve as ground-truth data for model calibration and validation within digital soil mapping approaches [@mcbratney_digital_2003; @wadoux_machine_2020]. The LUCAS soil survey represents one of the most widely used datasets for large-scale soil modelling in Europe, providing harmonised measurements of soil organic carbon, total nitrogen and related soil properties across the European Union [@orgiazzi_lucas_2018; @hong_path_2026]. These observations are commonly combined with environmental covariates representing major environmental gradients controlling soil carbon and nitrogen dynamics, including terrain attributes derived from digital elevation models, climatic variables, soil maps, land-use layers and remotely sensed predictors such as vegetation indices or radar observations [@wadoux_machine_2020; @khaledian_selecting_2020]. The increasing integration of remote sensing data into soil modelling is further illustrated by recent continental-scale studies combining LUCAS observations with multi-source satellite data to predict spatial patterns of soil C:N ratios [@wang_mapping_2025].
 
-Using such datasets, an increasing number of studies have applied spatial modelling approaches to predict soil C:N ratios across regional to continental scales [@hong_path_2026, @zhou_prediction_2021, @khosravani_soil_2026] (Hong et al., 2025; Zhou et al., 2021; Khosravani et al., 2026). These studies consistently show that spatial variability in soil C:N ratios emerges from interactions among multiple environmental gradients rather than from a single dominant predictor. However, the relative importance of individual predictors varies considerably depending on environmental conditions, predictor selection and modelling strategy [@hong_path_2026, @zhou_prediction_2021, @khaledian_selecting_2020] (Hong et al., 2025; Zhou et al., 2021; Khaledian & Miller, 2020). In addition, predictor importance may vary with spatial scale, with broad-scale studies emphasizing climatic gradients and large-scale structures, whereas finer-scale analyses highlight local soil properties and land-management effects [@minasny_digital_2016, @wadoux_machine_2020] (Minasny & McBratney, 2016; Wadoux et al., 2020).
+Using such datasets, an increasing number of studies have applied spatial modelling approaches to predict soil C:N ratios across regional to continental scales [@hong_path_2026; @zhou_prediction_2021; @khosravani_soil_2026]. These studies consistently show that spatial variability in soil C:N ratios emerges from interactions among multiple environmental gradients rather than from a single dominant predictor. However, the relative importance of individual predictors varies considerably depending on environmental conditions, predictor selection and modelling strategy [@hong_path_2026; @zhou_prediction_2021; @khaledian_selecting_2020]. In addition, predictor importance may vary with spatial scale, with broad-scale studies emphasizing climatic gradients and large-scale structures, whereas finer-scale analyses highlight local soil properties and land-management effects [@minasny_digital_2016; @wadoux_machine_2020].
 
-At the same time, the geographical distribution of spatial modelling studies on soil stoichiometry remains uneven. A substantial proportion of studies has been conducted in East Asia, particularly in China, whereas comparatively few studies exist for Europe [@hong_path_2026] (Hong et al., 2025). In Germany, national-scale modelling of soil C:N ratios remains limited to a small number of recent studies [@khosravani_soil_2026, @sakhaee_spatial_2024] (Sakhaee et al., 2024; Khosravani et al., 2026).
-In addition, studies on spatial modelling of soil C:N ratios remain unevenly distributed across land-use systems [@hong_path_2026, @deng_spatial_2020]. Many analyses focus on cropland or mixed land-use datasets, whereas grassland soils are comparatively underrepresented. This is particularly noteworthy given the importance of grasslands for terrestrial carbon storage and their sensitivity to land-use-related variation in soil properties [@herold_soil_2014] (Herold et al., 2014). In grassland systems, land-use intensity can be characterized through well-defined management practices such as fertilisation, grazing and mowing [@bluthgen_quantitative_2012] (Blüthgen et al., 2012), which influence nutrient inputs, biomass removal and redistribution processes. These management differences are associated with measurable ecosystem responses under contrasting management regimes [@schreiner_slow_2026] (Schreiner et al., 2026). Consequently, grasslands provide a suitable study system for evaluating whether predicted spatial patterns of soil C:N ratios reflect known effects of land use and management. 
+At the same time, the geographical distribution of spatial modelling studies on soil stoichiometry remains uneven. A substantial proportion of studies has been conducted in East Asia, particularly in China, whereas comparatively few studies exist for Europe [@hong_path_2026]. In Germany, national-scale modelling of soil C:N ratios remains limited to a small number of recent studies [@khosravani_soil_2026; @sakhaee_spatial_2024]. In addition, studies on spatial modelling of soil C:N ratios remain unevenly distributed across land-use systems [@hong_path_2026; @sakhaee_spatial_2024, @zhou_prediction_2021]. Many analyses focus on cropland or mixed land-use datasets, whereas grassland soils are comparatively underrepresented. This is particularly noteworthy given the importance of grasslands for terrestrial carbon storage and their sensitivity to land-use-related variation in soil properties [@herold_soil_2014]. In grassland systems, land-use intensity can be characterized through well-defined management practices such as fertilisation, grazing and mowing [@bluthgen_quantitative_2012], which influence nutrient inputs, biomass removal and redistribution processes. These management differences are associated with measurable ecosystem responses under contrasting management regimes [@schreiner_slow_2026]. Consequently, grasslands provide a suitable study system for evaluating whether predicted spatial patterns of soil C:N ratios reflect known effects of land use and management. 
 
-To capture such relationships, a range of statistical and machine-learning algorithms has been applied in digital soil mapping. Earlier approaches often relied on regression-based models or geostatistical interpolation techniques such as regression kriging, whereas more recent studies increasingly use machine-learning algorithms capable of modelling nonlinear relationships between environmental predictors and soil properties [@khaledian_selecting_2020, @wadoux_machine_2020] (Khaledian et al., 2020; Wadoux et al., 2020). Commonly applied models include Random Forest, Cubist and other ensemble approaches [@khaledian_selecting_2020] (Khaledian et al., 2020).
+To capture such relationships, a range of statistical and machine-learning algorithms has been applied in digital soil mapping. Earlier approaches often relied on regression-based models or geostatistical interpolation techniques such as regression kriging, whereas more recent studies increasingly use machine-learning algorithms capable of modelling nonlinear relationships between environmental predictors and soil properties [@khaledian_selecting_2020; @wadoux_machine_2020]. Commonly applied models include random forest, cubist and other ensemble approaches [@khaledian_selecting_2020].
 
-However, the methodological basis for selecting specific modelling algorithms often remains insufficiently transparent, even though different models may produce different prediction accuracies, variable importance structures and spatial prediction patterns when applied to identical datasets. Reported predictive performance in digital soil mapping varies widely depending on the target variable, spatial scale, predictor set and modelling approach, and is typically described as ranging from moderate to high explanatory power [@khaledian_selecting_2020, @wadoux_machine_2020] (Khaledian & Miller, 2020; Wadoux et al., 2020). 
+However, the methodological basis for selecting specific modelling algorithms often remains insufficiently transparent, even though different models may produce different prediction accuracies, variable importance structures and spatial prediction patterns when applied to identical datasets. Reported predictive performance in digital soil mapping varies widely depending on the target variable, spatial scale, predictor set and modelling approach, and is typically described as ranging from moderate to high explanatory power [@khaledian_selecting_2020; @wadoux_machine_2020]. 
 
-In addition, modelling C:N ratios poses a specific methodological challenge because the target variable represents a ratio derived from two independently measured soil properties. Uncertainty in both carbon and nitrogen measurements can propagate into the ratio and affect model stability and interpretation [@hong_path_2026] (Hong et al., 2025). Accordingly, studies either model the ratio directly or derive it from separately predicted components [@hong_path_2026, @wadoux_machine_2020] (Wadoux et al., 2020; Hong et al., 2025).
+In addition, modelling C:N ratios poses a specific methodological challenge because the target variable represents a ratio derived from two independently measured soil properties. Uncertainty in both carbon and nitrogen measurements can propagate into the ratio and affect model stability and interpretation [@hong_path_2026]. Accordingly, studies either model the ratio directly or derive it from separately predicted components [@hong_path_2026; @wadoux_machine_2020].
 
 Beyond statistical performance, interpreting spatial prediction maps requires evaluating ecological plausibility and prediction uncertainty. Previous work has highlighted that digital soil mapping products may contain systematic biases or spatial uncertainties that are not always explicitly assessed [@hong_path_2026] (Hong et al., 2025). Therefore, interpretation increasingly involves comparison with known environmental gradients or ecological processes [@wadoux_machine_2020] (Wadoux et al., 2020).
 
@@ -135,7 +136,7 @@ germany <- st_transform(germany, crs)
 
 # load LUCAS topsoil data
 lucas_eu <- suppressMessages(
-  sf::st_read('data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp')
+  sf::st_read('data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp', quiet = TRUE)
 )
 
 # reproject
@@ -160,9 +161,9 @@ min_dist <- min(distances)/1000
 max_dist <- max(distances)/1000
 ```
 
-The measurements of soil properties were obtained from the LUCAS topsoil survey 2015 (CITE). In Germany, it consisted of `r nrow(lucas)` samples. Sampling points had a mean distance of `r round(mean_dist,2)` ± `r round(sd_dist,2)`, with minimum and maximum distances of `r round(min_dist,2)` and `r round(max_dist,2)`, respectively. This data was used to calculate the C:N ratios by dividing soil organic carbon (SOC) by total nitrogen (N).
+The measurements of soil properties were obtained from the LUCAS topsoil survey 2015 [@jones_arwyn_lucas_2020]. In Germany, it consisted of `r nrow(lucas)` samples. Sampling points had a mean distance of `r round(mean_dist,2)` ± `r round(sd_dist,2)`, with minimum and maximum distances of `r round(min_dist,2)` and `r round(max_dist,2)`, respectively. This data was used to calculate the C:N ratios by dividing soil organic carbon (OC) by total nitrogen (N).
 
-```{r calculate-cn-ratio}
+```{r}
 #| label: fig-cn-distribution
 #| fig-cap: "Distribution of C:N ratio values derived from LUCAS 2015 samples in Germany."
 #| fig-height: 3
@@ -200,11 +201,11 @@ ggplot(lucas, aes(cn_ratio)) +
 
 ```
 
-The distribution of C:N ratios obtained this way was strongly right-skewed, with most values below 10 (Fig. @fig-cn-distribution). There was one notable outlier at a ratio of almost 40, but we did not remove it because it helps increases the prediction range of the random forest algorithm. The extreme value most likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
+The distribution of C:N ratios obtained this way was strongly right-skewed, with most values below 10 (@fig-cn-distribution). There was one notable outlier at a ratio of almost 40, but it likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
 
 ## Covariates
 
-The selection of environmental predictors was largely based on those proposed by @khosravani_soil_2026, who had identified them according to expert knowledge. We slightly modified them due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in Table XXX and in the following we describe how we obtained and processed all predictors more in detail.
+The selection of environmental predictors was largely based on those proposed by @khosravani_soil_2026, who had identified them according to expert knowledge. They were slightly modified where accurate replication was not possible due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in Table XXX and in the following we describe how we obtained and processed all predictors more in detail.
 
 
 | Abbreviation | Full name | Unit | Source |
@@ -226,9 +227,9 @@ The selection of environmental predictors was largely based on those proposed by
 
 : Covariates used in C:N prediction, as proposed by Khosravani et al. (2025)
 
-Elevation data at a resolution of 250 m was obtained from the global Digital Elevation Model provided by (REF Hengl, https://zenodo.org/records/1447210). Since it matched the target resolution, this raster was chosen as the reference to which we reprojected all other layers. terra [@terra] was used  to derive the covariates slope, aspect, and latitude from this elevation data.
+Elevation data at a resolution of 250 m was obtained from the global Digital Elevation Model provided by [@hengl_global_2018]. `terra` [@terra] was used  to derive the covariates slope, aspect, and latitude from this elevation data.
 
-The covariate layers temperature and precipitation were based on WorldClim [REF], which provides global climatic data at a 1km (??) resolution based on long-term monthly averages between 19XX and 20XX. We computed the mean annual temperature (ºC) and the total annual precipitation (mm).
+The covariate layers temperature and precipitation were based on WorldClim v2 [@fick_worldclim_2017] and retrieved via `geodata` [@geodata]. WorldClim provides long-term monthly averages of climatic data at a 1 km resolution on a global scale, from which mean annual temperature (ºC) and total annual precipitation (mm) were derived as covariates.
 
 ```{r load-covariate-data-1}
 
@@ -254,7 +255,7 @@ temp_annual <- mean(temp) # mean annual temperature
 precip_annual <- sum(precip) # total annual precipitation
 ```
 
-Land cover dissimilarity was based on the land cover classification by https://zenodo.org/records/3939038 (REF), which contains the 2015 global land cover at a 100 m resolution. To reduce computational demand, it was reprojected to the target resolution of 250 m via mode resampling. With this raster, we computed the statistic "dissimilarity" from image texture measures from grey-level co-occurrence matrices (GLCM), calculating dissimilarity across all direction using a 9x9 window (capturing the dissimilarity in a 2.25 km$^2$ square).
+Land cover dissimilarity was based on data by the Copernicus Global Land Service [@buchhorn_copernicus_2020], which contains a global land cover classification for 2015 at a 100 m resolution. To reduce computational demand, it was reprojected to the target resolution of 250 m via mode resampling. Based on this raster, the statistic "dissimilarity" from image texture measures from grey-level co-occurrence matrices (GLCM) was computed. Dissimilarity was calculated across all directions using a 9x9 window, to capture land cover heterogeneity in a radius of approximately 1 km$^2$.
 
 ```{r lc-and-dissimilarity}
 
@@ -299,14 +300,13 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
 
 ```
 
+Rasters of clay and silt content (g kg$^{-1}$), pH, and soil water content (%) at field capacity were obtained at a 250 m resolution from SoilGrids (https://soilgrids.org/). To approximate the sampling depth of LUCAS measurements (20 cm), weighted averages of the 0-5 and 5-15 cm layers were calculated for the four variables.
 
-Rasters of clay and silt content (g kg$^{-1}$), pH, and soil water content (SWC) at field capacity  at a 250 m resolution were obtained from SoilGrids (LINK). To approximate the sampling depth of LUCAS measurements (20 cm), we calculated weighted averages of the 0-5 and 5-15 cm layers for the four variables.
+The soil respiration rate in g C m$^{-2}$ y$^{-1}$ at a 1 km resolution was obtained from @earth_science_data_systems_global_2025.
 
-The soil respiration rate in g C m$^{-2}$ y$^{-1}$ at a 1 km resolution was obtained from https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1 
+For the human footprint, a raster of the 2015 human footprint at a 1 km resolution developed by @mu_global_2022 was used.
 
-For the human footprint, we used a raster of the 2015 human footprint at a 1 km resolution developed by https://doi.org/10.6084/m9.figshare.16571064) [MU et al]
-
-The Normalized Difference Vegetation Index (NDVI) was based on MODIS ... which we retrieved via Google Earth Engine. The NDVI value represents the 3-year growing season (XXX-XXX) mean from 2013 to 2015, in order to capture the long-term vegetation greenness.
+The Normalized Difference Vegetation Index (NDVI) was based on MODIS Terra Vegetation Indices [@didan_modisterra_2021], which provides NDVI data at a 250 m resolution every 16 days. The NDVI value represents the 3-year growing season (May-September) mean from 2013 to 2015, in order to capture the long-term vegetation trends. This mean was calculated and the resulting raster retrieved via Google Earth Engine.
 
 ```{r load-covariate-data-2}
 
@@ -346,9 +346,9 @@ ndvi <- rast('data/covariates/NDVI_Germany_2013_2015.tif')
 
 ```
 
-Once we had obtained the raster data for all predictors, we projected them to the same CRS (EPSG 25832, UTM 32N) and resolution (250 m) using bilinear resampling. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
+Once the raster data was obtained for all predictors, all layers were projected to the same CRS (EPSG 25832, UTM 32N) and resolution (250 m) using bilinear resampling. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
 
-To account for differences in land cover, we encoded four natural land cover types as dummy variables: cropland, forest, grassland (herbaceous vegetation), and wetland.
+To account for differences in land cover, four natural land cover types (from the land cover data by @buchhorn_copernicus_2020) were encoded as dummy variables: cropland, forest, herbaceous vegetation (natural grassland), and wetland.
 
 ```{r prepare-raster-stack}
 
@@ -369,23 +369,6 @@ for (predictor in predictors) {
 
 # reproject land cover (categorical, therefore use different reprojection method)
 land_cover_reproj <- project(land_cover, slope, method='mode') # majority voting
-# predictor_stack <- append(predictor_stack, land_cover_reproj)
-# make factor and add to stack
-# land_cover_reproj_fact <- as.factor(land_cover_reproj)
-# predictor_stack <- append(predictor_stack, land_cover_reproj_fact)
-
-
-# # mask out certain land cover types
-# unsuitable_lc_classes <- c(
-#   0, # no input data available
-#   50, # urban/built-up
-#   70, # snow and ice
-#   80, # permanent water bodies
-#   200 # open sea
-# )
-# suitable_lc <- app(predictor_stack$lc_class, fun=function(x){ x[x %in% unsuitable_lc_classes] <- NA; return(x)} ) # set pixels corresponding to those LC types to NA
-# predictor_stack <- mask(predictor_stack, suitable_lc) # set to NA in whole stack
-
 
 # add dummy variables encoding major land cover types
 forest_codes <- c(111,112,113,114,115,116,121,122,123,124,125,126)
@@ -396,7 +379,6 @@ cropland <- land_cover_reproj == 40
 
 # add to predictor stack (multiply by one to make True to 1 and False to 0)
 predictor_stack <- c(predictor_stack, forest*1, grassland*1, wetland*1, cropland*1)
-# names(predictor_stack) <- c(names(predictor_stack)[1:(length(names(predictor_stack))-4)], 'forest', 'grassland', 'wetland', 'cropland')
 
 # adjust names
 names(predictor_stack) <- c('slope', 'elevation', 'aspect', 'mean_temp', 'total_precip', 'latitude', 'lc_dissim', 'clay', 'silt', 'ph', 'swc', 's_resp', 'hfp', 'ndvi', 'forest', 'grassland', 'wetland', 'cropland')
@@ -406,11 +388,11 @@ predictor_stack <- mask(predictor_stack, germany)
 
 ```
 
-For a visualization of predictor ranges and (spatial) distributions, please refer to FIG XXX in the appendix.
+For a visualization of predictor ranges and (spatial) distributions, please refer to @plot-predictor-stack in the appendix.
 
 ## Models
 
-In our study, we compared the performance of random forest and cubist machine learning for soil C:N prediction. For this purpose, predictor values were extracted for each LUCAS sampling point. Models were then trained to predict the C:N ratio from these predictors.
+In this study, we compared the performance of random forest (RF) and cubist machine learning for soil C:N prediction. For this purpose, predictor values were extracted for each LUCAS sampling point. Models were then trained to predict the C:N ratio from these predictors.
 
 ```{r prepare-model-data}
 
@@ -424,7 +406,7 @@ data <- cbind(lucas['cn_ratio'], predictor_values) %>%
 
 ```
 
-We used k-fold cross-validation (CV) for hyperparameter tuning and estimating accuracy metrics. In k-fold CV, the dataset is split into k approximately equal parts ("folds"), and a model is iteratively fit on k-1 folds while the remaining fold is used for validation. The model accuracy metrics are then obtained by averaging the accuracy metrics for predictions (on the validation fold) across the folds. This CV approach offers a more robust estimate of model accuracy than a single training and testing split.
+K-fold cross-validation (CV) was used for hyperparameter tuning and estimating accuracy metrics. In k-fold CV, the dataset is split into k approximately equal parts ("folds"), and a model is iteratively fit on k-1 folds while the remaining fold is used for validation. The model accuracy metrics are then obtained by averaging the accuracy metrics for predictions (of the validation fold samples) across the folds. This CV approach offers a more robust estimate of model accuracy than a single training and testing split.
 
 ```{r model-cross-validation}
 
@@ -471,20 +453,20 @@ cubModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
 
 ```
 
-We implemented this k-fold CV using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning, and for the parameter `mtry` in random forest, i.e., the number of predictors used at each split, the lowest Root Mean Squared Error (RMSE) was found for `mtry` = `r rfModel$bestTune$mtry`. The number of trees was set to 500. For the cubist model, hyperparameter tuning showed that `r cubModel$bestTune$committees` committees and `r cubModel$bestTune$neighbors` neighbors led to the lowest RMSE. 
+This k-fold CV was implemented using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning, and for the parameter `mtry` in random forest, i.e., the number of predictors used at each split, the lowest Root Mean Squared Error (RMSE) was found for `mtry` = `r rfModel$bestTune$mtry`. The number of trees was set to 500. For the cubist model, hyperparameter tuning showed that `r cubModel$bestTune$committees` committees and `r cubModel$bestTune$neighbors` neighbors led to the lowest RMSE. 
 
 After the 10-fold CV, a random forest and a cubist model with these optimal hyperparameter values was trained on the full dataset to obtain the relative variable importance scores.
 
 ## Model performance
 
-Following @khosravani_soil_2026, we evaluated the model accuracy based on four metrics:
+Following @khosravani_soil_2026, the model accuracy was evaluated based on four metrics:
 
--   coefficient of determination (R$^2$), which indicates how much of the variance can be explained by the model
--   root mean squared error (RMSE), which measures XXX
--   Bias, which shows whether the model systematically over- or underestimates the target variable
--   concordance correlation coefficient (CCC), which quantifies the agreement between observed and predicted values
+-   **coefficient of determination (R$^2$)**, which indicates how much of the variance can be explained by the model
+-   **root mean squared error (RMSE)**, which measures XXX
+-   **Bias**, which shows whether the model systematically over- or underestimates the target variable
+-   **concordance correlation coefficient (CCC)**, which quantifies the agreement between observed and predicted values
 
-We followed the approach of @zhou_prediction_2021 and calculated accuracy metrics as the mean from the 10-fold cross-validation predictions to have more robust estimates of model accuracy.
+Following the approach of @zhou_prediction_2021, accuracy metrics were calculated as the mean from the 10-fold cross-validation predictions to have more robust estimates of model accuracy.
 
 ```{r calculate-accuracy-measures}
 
@@ -564,11 +546,11 @@ t_test_ccc <-t.test(rf_preds_accuracy$CCC, cubist_preds_accuracy$CCC, paired = T
 
 ```
 
-To evaluate whether the models' performance was significantly different, we conducted paired T-tests on the accuracy metric distributions across the CV folds. A Shapiro-Wilk test was used beforehand to ensure an approximately normal distribution of differences between the paired metrics (p = `r round(shapiro_r2$p.value,3)` for R$^2$, p = `r round(shapiro_rmse$p.value,3)` for RMSE, p = `r round(shapiro_bias$p.value,3)` for Bias, p = `r round(shapiro_ccc$p.value,3)` for CCC). However, it needs to be acknowledged that conducting a paired t-Test on the values from 10-fold CV might have an increased risk of Type 1 error (suggesting a significant difference when there is none), because while the test data the metrics are based on is independent, the training data is not completely [REF Dietterich].
+To evaluate whether the models' performance was significantly different, paired t-tests were conducted on the accuracy metric distributions across the CV folds. A Shapiro-Wilk test was used beforehand to ensure an approximately normal distribution of differences between the paired metrics (p = `r round(shapiro_r2$p.value,3)` for R$^2$, p = `r round(shapiro_rmse$p.value,3)` for RMSE, p = `r round(shapiro_bias$p.value,3)` for Bias, p = `r round(shapiro_ccc$p.value,3)` for CCC). However, it needs to be acknowledged that conducting a paired t-Test on the values from 10-fold CV might have an increased risk of Type 1 error (suggesting a significant difference when there is none), because while the test data the metrics are based on is independent, the training data is not completely since it partially overlaps [@dietterich_approximate_1998].
 
 ## Mapping
 
-To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosravani_soil_2026 did. Due to computational constraints, we used 30 iterations for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data (representing on average 63.2% of the complete data) and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, we calculated the mean predicted C:N as well as an uncertainty map based on the standard deviation. To investigate possible spatial patterns between the RF and Cubist predictions, we also computed a difference map by substracting the mean cubist from the mean RF map.
+To obtain mean and uncertainty maps, we used a bootstrapping approach as done by @khosravani_soil_2026. Due to computational constraints, 30 iterations were used for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data (representing on average 63.2% of the complete data) and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, the mean predicted C:N as well as an uncertainty map based on the standard deviation were calculated. To investigate possible spatial patterns between predictions from the two models, a difference map was computed by substracting the mean cubist from the mean RF map.
 
 ```{r bootstrapping}
 
@@ -655,9 +637,7 @@ diff_map_abs <- abs(diff_map)
 
 To illustrate a possible use case for C:N maps and evaluate the ecological plausibility of the spatial predictions, we tested whether predicted C:N ratios in grasslands were significantly higher if they were located in protected areas. 
 
-For this purpose, we used a shapefile of Natura 2000 areas -- the major network of protected areas in Europe -- obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4, which we rasterized using the reference slope grid.
-
-A separate grassland map from XXX was used since the land cover we used for the predictor stack did not include it as a distinct class.
+For this purpose, a shapefile of Natura 2000 areas -- the major network of protected areas in Europe -- was obtained from @natura, which was rasterized using the reference slope grid. A separate grassland map from @grassland was used since the land cover used for the predictor stack did not include it as a distinct class. This raster was reprojected from 100 to 250 m via mode resampling. Then, the mean maps from both models were masked to obtain grassland C:N values in and outside protected areas.
 
 ```{r prepare-natura-grassland-df}
 
@@ -682,8 +662,6 @@ grassland_ger <- grassland_ger == 1
 # reproject to match raster stack grid (250 m) using mode resampling --> only classify as grassland if majority of 100 pixels are grassland 
 grassland_ger <- project(grassland_ger, slope, method='mode')
 
-# make two masks
-# grassland_natura_mask <- mask(grassland_ger)
 
 # function to mask rasters by grassland and natura, and convert to dataframe
 # function developed by Claude Sonnet 4.6
@@ -720,6 +698,7 @@ create_cn_boxplot_df <- function(cn_raster1, cn_raster2,
   return(df)
 }
 
+# create
 grass_natura_df <- create_cn_boxplot_df(
   cn_raster1       = rf_mean_map,
   cn_raster2       = cub_mean_map,
@@ -772,7 +751,7 @@ cliff_cub <- cliff.delta(cn_ratio ~ protected, data = sample_df)
 
 Random forest and cubist showed similar accuracy in the 10-fold cross-validation (@acc-table). RF had a marginally lower error (RMSE) and captured slightly more of the variability (R$^2$) than the cubist model, but the differences were not statistically different (t(9) = `r round(t_test_rmse$statistic[['t']], 2)`, p = `r round(t_test_rmse$p.value, 2)` for RMSE; t(9) = `r round(t_test_r2$statistic[['t']], 2)`, p = `r round(t_test_r2$p.value, 2)` for R$^2$). 
 
-The cubist model had a higher mean CCC value, however, which was also reflected in Figure @fig-obs-vs-pred, where points were on average closer to the 1:1 line for cubist. This difference was statistically significant (t(9) = `r round(t_test_ccc$statistic[['t']], 2)` p < 0.001)
+The cubist model had a higher mean CCC value, however, which was also reflected in @fig-obs-vs-pred, where points were on average closer to the 1:1 line for cubist. This difference was statistically significant (t(9) = `r round(t_test_ccc$statistic[['t']], 2)` p < 0.001)
 
 A notable difference was found in the Bias, which showed that RF tended to overestimate C:N more often while cubist tended to underestimate it (see also Table XXX in appendix), but both only to a small extent. This difference was also statistically significant (t(9) = `r round(t_test_bias$statistic[['t']], 2)` p = `r round(t_test_bias$p.value, 3)`).
 
@@ -786,7 +765,7 @@ Most metrics had low standard deviations, especially CCC, indicating stable mode
 knitr::kable(accuracies_summarized)
 ```
 
-```{r plot-obs-vs-pred}
+```{r}
 #| label: fig-obs-vs-pred
 #| fig-cap: "Observed vs. predicted values for Random Forest and Cubist models. Predicted values are from out-of-box prediction during the 10-fold CV. Count refers to the number of sampling points represented by each plotted hexagon"
 
@@ -913,7 +892,7 @@ p2 <- ggplot() +
 
 ```
 
-With a mean standard deviation of `r show_mean_sd(rf_sd_map)`, random forest predictions were on average less uncertain than those from cubist, which had a mean standard deviation of `r show_mean_sd(cub_sd_map)`. Especially for the cubist prediction, the spatial pattern of uncertainty resembled the pattern of higher predicted C:N values (Fig. @plot-sd-maps). Maximum standard deviations in the Cubist map were located where the random forest did not make predictions due to missing data, mostly where large water bodies are located.
+With a mean standard deviation of `r show_mean_sd(rf_sd_map)`, random forest predictions were on average less uncertain than those from cubist, which had a mean standard deviation of `r show_mean_sd(cub_sd_map)`. Especially for the cubist prediction, the spatial pattern of uncertainty resembled the pattern of higher predicted C:N values (@plot-sd-maps). Maximum standard deviations in the Cubist map were located where the random forest did not make predictions due to missing data, mostly where large water bodies are located.
 
 ```{r}
 #| label: diff-map
@@ -945,7 +924,7 @@ fraction_cub_higher <- sum(vals < 0, na.rm = TRUE) / total
 
 ```
  
-The mean difference in predictions between the two models was `r show_mean_sd(diff_map)`, and ranged from `r round(min(values(diff_map), na.rm = TRUE), 2)` to `r round(max(values(diff_map), na.rm = TRUE), 2)`. Most pixels (`r round(fraction_very_small_diff * 100, 2)`) had only small absolute differences of up to 0.5. Overall, random forest had higher predictions in a majority of pixels (`r round(fraction_rf_higher * 100, 2)`), see Fig. @diff-map.
+The mean difference in predictions between the two models was `r show_mean_sd(diff_map)`, and ranged from `r round(min(values(diff_map), na.rm = TRUE), 2)` to `r round(max(values(diff_map), na.rm = TRUE), 2)`. Most pixels (`r round(fraction_very_small_diff * 100, 2)`) had only small absolute differences of up to 0.5. Overall, random forest had higher predictions in a majority of pixels (`r round(fraction_rf_higher * 100, 2)`), see @diff-map.
 
 ```{r}
 #| label: plot-by-land-cover
@@ -996,7 +975,7 @@ ggplot(df_plot, aes(x = landcover, y = value, fill = model)) +
 
 ```
 
-Both models mostly captured the same ranking of land cover types in terms of mean prediction and uncertainty (Fig @plot-by-land-cover). Highest mean values were found in forests, which also had the highest uncertainty. Wetlands had a comparable level of uncertainty, as well as the second highest mean C:N. Third ranked in both aspects were grasslands and lastly cropland. The boxplot highlighted again how random forest overall had a lower uncertainty, with cubist values often exhibiting larger ranges.
+Both models mostly captured the same ranking of land cover types in terms of mean prediction and uncertainty (@plot-by-land-cover). Highest mean values were found in forests, which also had the highest uncertainty. Wetlands had a comparable level of uncertainty, as well as the second highest mean C:N. Third ranked in both aspects were grasslands and lastly cropland. The boxplot highlighted again how random forest overall had a lower uncertainty, with cubist values often exhibiting larger ranges.
 
 ## Ecological plausibility
 
@@ -1026,7 +1005,7 @@ ggplot(grass_natura_df, aes(protected, cn_ratio, fill = model)) +
 
 ```
 
-Both models predicted slightly higher C:N ratios in Natura 2000 protected grasslands than in unprotected grasslands (Fig. @fig-natura-boxplot). The difference in means was slightly higher for RF (`r round(summary_df$mean[4] - summary_df$mean[3],2)`) than for cubist (`r round(summary_df$mean[2] - summary_df$mean[1],2)`). The differences were found to be significant in both models (Mann–Whitney U, p < 0.01), but with a small effect size for random forest (Cliff's Delta `r round(cliff_rf$estimate, 3)`) and negligible effect size for cubist (Cliff's Delta `r round(cliff_cub$estimate, 3)`).
+Both models predicted slightly higher C:N ratios in Natura 2000 protected grasslands than in unprotected grasslands (@fig-natura-boxplot). The difference in means was slightly higher for RF (`r round(summary_df$mean[4] - summary_df$mean[3],2)`) than for cubist (`r round(summary_df$mean[2] - summary_df$mean[1],2)`). The differences were found to be significant in both models (Mann–Whitney U, p < 0.01), but with a small effect size for random forest (Cliff's Delta `r round(cliff_rf$estimate, 3)`) and negligible effect size for cubist (Cliff's Delta `r round(cliff_cub$estimate, 3)`).
 
 {{< pagebreak >}}
 
@@ -1062,7 +1041,7 @@ Taken together, these findings indicate that predictor importance does not follo
 
 *Large-scale spatial consistency and general plausibility*
 
-The spatial predictions of soil C:N ratios revealed consistent large-scale gradients across Germany, with both models capturing patterns that broadly align with established controls of soil stoichiometry. Predicted values ranged from 7.40 to 24.62 for Random Forest and from 6.45 to 22.47 for Cubist, falling within the general magnitude reported in previous studies. In particular, @khosravani_soil_2026 reported comparable national-scale C:N ranges for Germany (Cubist: ~8–20), with most values occurring within a moderate range typical for mineral soils and higher values associated with forested and organic-rich environments. This suggests that both approaches are capable of reproducing broad-scale C:N distributions when key environmental predictors are included [@hong_path_2026, @zhou_prediction_2021].
+The spatial predictions of soil C:N ratios revealed consistent large-scale gradients across Germany, with both models capturing patterns that broadly align with established controls of soil stoichiometry. Predicted values ranged from 7.40 to 24.62 for Random Forest and from 6.45 to 22.47 for Cubist, falling within the general magnitude reported in previous studies. In particular, @khosravani_soil_2026 reported comparable national-scale C:N ranges for Germany (Cubist: ~8–20), with most values occurring within a moderate range typical for mineral soils and higher values associated with forested and organic-rich environments. This suggests that both approaches are capable of reproducing broad-scale C:N distributions when key environmental predictors are included [@hong_path_2026; @zhou_prediction_2021].
 
 *Land-cover-specific patterns and ecological interpretation (tentative)*
 
@@ -1070,7 +1049,7 @@ Across land-cover types, preliminary patterns indicate higher C:N ratios in fore
 
 *Range compression and limitations of ML predictions*
 
-A central pattern emerging from our results is the systematic compression of the predicted C:N range. Both models produced a narrower range compared to the observed soil data, indicating a tendency to underestimate variability. This behaviour is consistent with previous findings that machine-learning approaches tend to smooth extreme values and regress predictions towards the mean [@hong_path_2026, @sakhaee_spatial_2024].
+A central pattern emerging from our results is the systematic compression of the predicted C:N range. Both models produced a narrower range compared to the observed soil data, indicating a tendency to underestimate variability. This behaviour is consistent with previous findings that machine-learning approaches tend to smooth extreme values and regress predictions towards the mean [@hong_path_2026; @sakhaee_spatial_2024].
 
 *Similar performance but divergent spatial predictions*
 
@@ -1079,8 +1058,10 @@ Despite very similar overall model performance (RMSE: 2.74–2.76; R²: ~0.60; C
 *Spatial structure of model disagreement, structural uncertainty and model sensitivity*
 
 Model disagreement was spatially widespread across Germany, indicating that differences between algorithms occurred throughout the study area. However, disagreement values were not evenly distributed but showed clear spatial clustering, with higher concentrations of Δ values in specific physiographic regions. These hotspots were particularly evident in forested and topographically complex landscapes, including parts of southern Germany such as the Bavarian Forest and Alpine forelands, as well as selected areas of the Central Uplands (e.g. Harz, Hunsrück) and northern lowlands (e.g. northeastern lake districts, northwestern Geest). In contrast, regions with lower predicted C:N values showed a more diffuse spatial pattern and less pronounced clustering of disagreement, for example in parts of the Swabian-Franconian Alb and the Oldenburg–East Frisian Geest.
-This spatial structuring suggests that model disagreement is not random but related to environmental gradients, particularly in geomorphologically complex and forest-dominated systems. While direct comparisons based on disagreement maps are rare, this pattern is consistent with findings from digital soil mapping studies showing that prediction uncertainty and model sensitivity tend to increase in heterogeneous landscapes, under high covariate variability and limited sample support [@nozari_digital_2024, @wadoux_machine_2020]. The magnitude of disagreement (|Δ|) further highlights regions of increased model sensitivity and can be interpreted as an indicator of model-dependent predictions, particularly where different algorithms respond differently to complex environmental conditions.
-This interpretation is supported by the spatial distribution of prediction uncertainty. Random Forest predictions were on average less uncertain (mean SD: 0.47 ± 0.27) than Cubist predictions (0.81 ± 0.57), indicating higher overall model stability. This pattern was consistent across all land-cover types, with lower uncertainty values for Random Forest in grassland (0.37 vs. 0.74), forest (0.64 vs. 1.14), cropland (0.31 vs. 0.47) and wetland systems (0.63 vs. 1.40). Similar tendencies have been reported in previous DSM studies, where Random Forest often showed more stable predictions compared to Cubist in mapping soil properties [@khaledian_selecting_2020, @nozari_digital_2024].
+
+This spatial structuring suggests that model disagreement is not random but related to environmental gradients, particularly in geomorphologically complex and forest-dominated systems. While direct comparisons based on disagreement maps are rare, this pattern is consistent with findings from digital soil mapping studies showing that prediction uncertainty and model sensitivity tend to increase in heterogeneous landscapes, under high covariate variability and limited sample support [@nozari_digital_2024; @wadoux_machine_2020]. The magnitude of disagreement (|Δ|) further highlights regions of increased model sensitivity and can be interpreted as an indicator of model-dependent predictions, particularly where different algorithms respond differently to complex environmental conditions.
+
+This interpretation is supported by the spatial distribution of prediction uncertainty. Random Forest predictions were on average less uncertain (mean SD: 0.47 ± 0.27) than Cubist predictions (0.81 ± 0.57), indicating higher overall model stability. This pattern was consistent across all land-cover types, with lower uncertainty values for Random Forest in grassland (0.37 vs. 0.74), forest (0.64 vs. 1.14), cropland (0.31 vs. 0.47) and wetland systems (0.63 vs. 1.40). Similar tendencies have been reported in previous DSM studies, where Random Forest often showed more stable predictions compared to Cubist in mapping soil properties [@khaledian_selecting_2020; @nozari_digital_2024].
 
 Across both models, uncertainty was lowest in croplands and highest in forest and wetland systems, reinforcing the link between environmental heterogeneity and predictive uncertainty. Moderate correlations between absolute model differences and uncertainty (RF: r = 0.37; Cubist: r = 0.27) further suggest that disagreement and uncertainty are partly related.
 
@@ -1090,11 +1071,15 @@ This supports previous findings that predictive uncertainty in digital soil mapp
 
 *Data-driven limitations (LUCAS sampling design)*
 
-A key limitation underlying both spatial patterns and uncertainty structures is the configuration of the LUCAS dataset, with a mean sampling distance of approximately 7–8 km, which constrains the representation of fine-scale heterogeneity, particularly in variable systems such as grasslands and peat-influenced environments [@hong_path_2026, @pouladi_mapping_2019].
+A key limitation underlying both spatial patterns and uncertainty structures is the configuration of the LUCAS dataset, with a mean sampling distance of approximately 7–8 km, which constrains the representation of fine-scale heterogeneity, particularly in variable systems such as grasslands and peat-influenced environments [@hong_path_2026; @pouladi_mapping_2019].
 
 *Implications for DSM and future work*
 
 Overall, the results indicate that uncertainty should not be treated merely as a residual modelling artefact but as an informative component of spatial prediction. Areas of high uncertainty and strong model disagreement can serve as priority targets for improved sampling and model refinement, particularly in environmentally complex regions where current predictions are most constrained.
+
+## Ecological plausibility
+
+Predicted C:N ratios were consistently higher in grasslands located within Natura 2000 areas compared to non-protected sites, indicating a systematic but small differentiation at the national scale (Mann–Whitney U, p < 0.001; Cliff’s Delta = −0.17). This supports the hypothesis that land-use intensity is reflected in soil stoichiometry, as protected grasslands are generally managed less intensively, with lower nitrogen inputs and disturbance. Accordingly, empirical studies show that intensively managed grasslands tend to exhibit narrower C:N ratios (~11–13), whereas more extensive systems display wider ratios (~13–16) due to lower nitrogen availability (Blüthgen et al., 2012; Herold et al., 2014). Conservation management has likewise been linked to increased soil carbon storage and shifts in nutrient balances that can result in higher C:N ratios [@murindangabo_long-term_2026], consistent with ecological stoichiometry theory [@sardans_cnp_2012]. However, the small effect size indicates that protection status alone is a weak predictor of soil C:N at this scale. This likely reflects heterogeneous land-use intensity across both groups, combined with the uneven implementation of conservation measures within Natura 2000, which is often shaped by socio-economic and administrative constraints [@rouveyrol_agri-environmental_2024; @european_commission_directorate_general_for_agriculture_and_rural_development_evaluation_2020; @gorris_social-ecological_2025]. In addition, the absence of explicit management variables limits the representation of land-use effects. Moreover, predictive soil mapping approaches tend to underestimate the true range of C:N ratios, leading to compressed value distributions and reduced contrasts between land-use classes [@hong_path_2026], which likely contributes to the small observed effect size. Overall, the models capture ecologically plausible trends, but differentiation remains subtle due to both management heterogeneity and modelling-induced smoothing. Future studies must integrate spatially explicit management indicators (e.g. nitrogen inputs, mowing, grazing) and apply modelling approaches that reduce range compression, supported by targeted validation designs to isolate management effects.
 
 {{< pagebreak >}}
 
@@ -1198,12 +1183,15 @@ ggplot(combined_stats, aes(source, ymin = min, ymax = max)) +
 ```
 
 
-```{r plot-predictor-stack}
-#| eval: false
-
+```{r}
+#| label: plot-predictor-stack
+#| fig-cap: "Spatial distribution of predictor variables."
 
 # set up plot grid
-par(mfrow = c(3, 6)) 
+par(mfrow = c(5, 3)) 
+
+# use only numeric variables
+r_num <- predictor_stack[[1:14]]
 
 # define units
 units <- list(
@@ -1213,45 +1201,37 @@ units <- list(
   mean_temp = "°C",
   total_precip = "mm",
   latitude = "°",
-  lc_dissim = "none",
-  clay = "g/kg",
-  silt = "g/kg",
-  ph = "none",
-  swc = "???",
-  r_resp = "???",
-  hfp = "none",
-  ndvi = "none"
+  lc_dissim = "",
+  clay = "g kg-1",
+  silt = "g kg-1",
+  ph = "",
+  swc = "%",
+  r_resp = "g C m-2 y-1",
+  hfp = "",
+  ndvi = ""
 )
 
-for (i in 1:nlyr(predictor_stack)) {
+for (i in 1:nlyr(r_num)) {
   
-  r <- predictor_stack[[i]]
+  r <- r_num[[i]]
   nm <- names(r)
 
   vals <- values(r)
   
-  if (all(vals %in% c(0,1), na.rm = TRUE)) {
-    # boolean layer
-    plot(
-      r,
-      main = paste0(nm),
-      col = c("lightgrey", "darkgreen"),
-      breaks = c(-0.5, 0.5, 1.5)#,
-      # plg = list(at = c(0,1), labels = c("False","True"))
-    )
+  # show only min and max values on colorbar
+  rmin <- minmax(r)[1]
+  rmax <- minmax(r)[2]
     
-  } else {
-    # continuous layer
-    rmin <- minmax(r)[1]
-    rmax <- minmax(r)[2]
-    
-    plot(
-      r,
-      main = paste0(nm, " [", units[nm], "]"),
-      col = hcl.colors(50, "viridis"),
-      plg = list(at = c(rmin, rmax), labels = round(c(rmin, rmax), 2))
-    )
-  }
+  # define title (with unit if there is one)
+  unit <- units[[nm]]
+  title_text <- if (unit == "") nm else paste0(nm, " [", unit, "]")
+  
+  plot(
+    r,
+    main = title_text,
+    col = hcl.colors(50, "viridis"),
+    plg = list(at = c(rmin, rmax), labels = round(c(rmin, rmax), 2))
+  )
 }
 ```
 
