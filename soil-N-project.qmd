@@ -1,16 +1,20 @@
 ---
 title: "Digital soil mapping of C:N ratio across Germany"
-author: " & Nina Preußler"
+author: "Ullrike XXX & Nina Preußler"
 format:
   html:
     self-contained: true 
+  pdf:
+    execute:
+      echo: false # don't show code in PDF
 execute: # set global chunk options
-  echo: true # show code 
+  echo: true # show code (by default for HTML)
   warning: false # don't show warnings
   error: false # only render if no errors arise
+  message: false
+  freeze: auto # prevent recomputation unless code changes
 bibliography: references.bib 
 csl: https://www.zotero.org/styles/apa # citation style
-editor: visual
 knitr:
   opts_knit:
     root.dir: "~/Documents/00_ESDSRS/semester1/3_soil/soil-N-project" # working directory
@@ -27,6 +31,28 @@ max. 150 words
 
 # Introduction
 
+The soil carbon-to-nitrogen (C:N) ratio is a widely used indicator of soil biogeochemical functioning because it reflects the balance between carbon and nitrogen in soil organic matter and is closely linked to nutrient cycling processes [@cleveland_cnp_2007, @sardans_cnp_2012] (Cleveland & Liptzin, 2007; Sardans et al., 2012). Changes in soil C:N ratios influence microbial nutrient demand, decomposition dynamics and nitrogen mineralization, thereby shaping soil organic matter turnover and broader ecosystem functioning [@cleveland_cnp_2007, @springob_bulk_2003] (Cleveland & Liptzin, 2007; Springob & Kirchmann, 2003). For this reason, the C:N ratio is frequently used as an indicator of soil organic matter quality and nutrient availability across terrestrial ecosystems [@ostrowska_assessment_2015, @springob_bulk_2003] (Ostrowska et al., 2015; Springob & Kirchmann, 2003). Understanding how soil C:N ratios vary across space is therefore essential for analysing large-scale patterns of soil functioning and nutrient cycling.
+
+Spatial modelling provides a framework to analyse such variation beyond sampled locations by linking measured soil properties with spatially explicit environmental covariates representing soil-forming factors and environmental gradients [@mcbratney_digital_2003, @wadoux_machine_2020] (McBratney et al., 2003; Wadoux et al., 2020). In the context of soil stoichiometry, spatial prediction enables the identification of relationships between C:N ratios and environmental drivers such as climate, topography, soil properties and land use [@hong_path_2026, @sardans_cnp_2012] (Hong et al., 2025; Sardans et al., 2012). Mapping these relationships allows the investigation of how environmental gradients shape spatial patterns of soil carbon and nitrogen dynamics across landscapes and regions.
+
+Spatial prediction of soil C:N ratios typically relies on laboratory-derived soil observations from georeferenced sampling sites that serve as ground-truth data for model calibration and validation within digital soil mapping approaches [@mcbratney_digital_2003, @wadoux_machine_2020] (McBratney et al., 2003; Wadoux et al., 2020). The LUCAS soil survey represents one of the most widely used datasets for large-scale soil modelling in Europe, providing harmonised measurements of soil organic carbon, total nitrogen and related soil properties across the European Union [@orgiazzi_lucas_2018, @hong_path_2026] (Orgiazzi et al., 2018; Hong et al., 2025). These observations are commonly combined with environmental covariates representing major environmental gradients controlling soil carbon and nitrogen dynamics, including terrain attributes derived from digital elevation models, climatic variables, soil maps, land-use layers and remotely sensed predictors such as vegetation indices or radar observations [@wadoux_machine_2020, @khaledian_selecting_2020] (Wadoux et al., 2020; Khaledian & Miller, 2020). The increasing integration of remote sensing data into soil modelling is further illustrated by recent continental-scale studies combining LUCAS observations with multi-source satellite data to predict spatial patterns of soil C:N ratios [@wang_mapping_2025] (Wang et al., 2025).
+
+Using such datasets, an increasing number of studies have applied spatial modelling approaches to predict soil C:N ratios across regional to continental scales [@hong_path_2026, @zhou_prediction_2021, @khosravani_soil_2026] (Hong et al., 2025; Zhou et al., 2021; Khosravani et al., 2026). These studies consistently show that spatial variability in soil C:N ratios emerges from interactions among multiple environmental gradients rather than from a single dominant predictor. However, the relative importance of individual predictors varies considerably depending on environmental conditions, predictor selection and modelling strategy [@hong_path_2026, @zhou_prediction_2021, @khaledian_selecting_2020] (Hong et al., 2025; Zhou et al., 2021; Khaledian & Miller, 2020). In addition, predictor importance may vary with spatial scale, with broad-scale studies emphasizing climatic gradients and large-scale structures, whereas finer-scale analyses highlight local soil properties and land-management effects [@minasny_digital_2016, @wadoux_machine_2020] (Minasny & McBratney, 2016; Wadoux et al., 2020).
+
+At the same time, the geographical distribution of spatial modelling studies on soil stoichiometry remains uneven. A substantial proportion of studies has been conducted in East Asia, particularly in China, whereas comparatively few studies exist for Europe [@hong_path_2026] (Hong et al., 2025). In Germany, national-scale modelling of soil C:N ratios remains limited to a small number of recent studies [@khosravani_soil_2026, @sakhaee_spatial_2024] (Sakhaee et al., 2024; Khosravani et al., 2026).
+In addition, studies on spatial modelling of soil C:N ratios remain unevenly distributed across land-use systems [@hong_path_2026, @deng_spatial_2020]. Many analyses focus on cropland or mixed land-use datasets, whereas grassland soils are comparatively underrepresented. This is particularly noteworthy given the importance of grasslands for terrestrial carbon storage and their sensitivity to land-use-related variation in soil properties [@herold_soil_2014] (Herold et al., 2014). In grassland systems, land-use intensity can be characterized through well-defined management practices such as fertilisation, grazing and mowing [@bluthgen_quantitative_2012] (Blüthgen et al., 2012), which influence nutrient inputs, biomass removal and redistribution processes. These management differences are associated with measurable ecosystem responses under contrasting management regimes [@schreiner_slow_2026] (Schreiner et al., 2026). Consequently, grasslands provide a suitable study system for evaluating whether predicted spatial patterns of soil C:N ratios reflect known effects of land use and management. 
+
+To capture such relationships, a range of statistical and machine-learning algorithms has been applied in digital soil mapping. Earlier approaches often relied on regression-based models or geostatistical interpolation techniques such as regression kriging, whereas more recent studies increasingly use machine-learning algorithms capable of modelling nonlinear relationships between environmental predictors and soil properties [@khaledian_selecting_2020, @wadoux_machine_2020] (Khaledian et al., 2020; Wadoux et al., 2020). Commonly applied models include Random Forest, Cubist and other ensemble approaches [@khaledian_selecting_2020] (Khaledian et al., 2020).
+
+However, the methodological basis for selecting specific modelling algorithms often remains insufficiently transparent, even though different models may produce different prediction accuracies, variable importance structures and spatial prediction patterns when applied to identical datasets. Reported predictive performance in digital soil mapping varies widely depending on the target variable, spatial scale, predictor set and modelling approach, and is typically described as ranging from moderate to high explanatory power [@khaledian_selecting_2020, @wadoux_machine_2020] (Khaledian & Miller, 2020; Wadoux et al., 2020). 
+
+In addition, modelling C:N ratios poses a specific methodological challenge because the target variable represents a ratio derived from two independently measured soil properties. Uncertainty in both carbon and nitrogen measurements can propagate into the ratio and affect model stability and interpretation [@hong_path_2026] (Hong et al., 2025). Accordingly, studies either model the ratio directly or derive it from separately predicted components [@hong_path_2026, @wadoux_machine_2020] (Wadoux et al., 2020; Hong et al., 2025).
+
+Beyond statistical performance, interpreting spatial prediction maps requires evaluating ecological plausibility and prediction uncertainty. Previous work has highlighted that digital soil mapping products may contain systematic biases or spatial uncertainties that are not always explicitly assessed [@hong_path_2026] (Hong et al., 2025). Therefore, interpretation increasingly involves comparison with known environmental gradients or ecological processes [@wadoux_machine_2020] (Wadoux et al., 2020).
+
+Against this background, important gaps remain. Systematic comparisons of machine-learning algorithms for predicting soil C:N ratios at national scale are still limited, particularly in Europe. In addition, the ecological plausibility of predicted patterns is not consistently evaluated, and grassland systems remain underrepresented as independent validation contexts.
+
+The present study therefore investigates the spatial prediction of soil C:N ratios across Germany using two machine-learning algorithms. Soil C:N ratios derived from the LUCAS soil database were modelled using Random Forest and Cubist based on a harmonized set of environmental predictors. The resulting prediction maps were compared with respect to model performance, spatial prediction patterns and covariate effects. In addition, the ecological plausibility of predicted patterns was assessed by comparing modelled C:N ratios of grassland soils within and outside Natura 2000 protected areas as a proxy for management intensity.
 
 
 ## Fragestellung
@@ -42,7 +68,7 @@ How does spatial prediction of soil C:N stoichiometry across Germany differ when
 
 The analysis was conducted using R statistical software (REF) integrated in Quarto (REF). We extensively used the packages terra, caret, tidyverse/dplyr, and ggplot (REF).
 
-```{r load-packages}
+```{r setup}
 #| include: false
 
 library(glcm)
@@ -52,6 +78,7 @@ library(randomForest)
 library(caret) # for k-fold cross-validation
 library(sf)
 library(gstat)
+library(effsize)
 library(terra)
 library(tmap)
 library(devtools)
@@ -62,7 +89,14 @@ library(patchwork)
 library(tidyterra)
 library(tidyverse)
 library(glue)
-options(renv.config.startup.quiet = TRUE)
+
+# function for displaying as mean ± sd
+show_mean_sd <- function(raster) {
+  raster_val <- values(raster)
+  mean_val <- mean(raster_val, na.rm = TRUE)
+  sd_val <- sd(raster_val, na.rm = TRUE)
+  return(paste(round(mean_val, 2), '±', round(sd_val,2)))
+}
 ```
 
 The prediction of soil C:N was conducted on the scale of Germany. The shapefile of the administrative boundaries was obtained from `rnaturalearth` [@rnaturalearth].
@@ -71,7 +105,7 @@ The prediction of soil C:N was conducted on the scale of Germany. The shapefile 
 
 library(rnaturalearth)
 library(devtools)
-devtools::install_github("ropensci/rnaturalearthhires", quiet = TRUE)
+# devtools::install_github("ropensci/rnaturalearthhires", quiet = TRUE)
 
 # get Germany boundary polygon
 germany <- ne_countries(scale = 10, country = "Germany", returnclass = "sf") %>%
@@ -89,14 +123,8 @@ germany <- st_transform(germany, crs)
 
 ```
 
-Germany has a highly heterogenous landscape...
-XXX % cropland
-XXX % urban
-temperate climate
 
-## Data
-
-### LUCAS soil survey
+## C:N ratio
 
 ```{r load-lucas-data}
 
@@ -128,13 +156,14 @@ max_dist <- max(distances)/1000
 The measurements of soil properties were obtained from the LUCAS topsoil survey 2015 (CITE). In Germany, it consisted of `r nrow(lucas)` samples. Sampling points had a mean distance of `r round(mean_dist,2)` ± `r round(sd_dist,2)`, with minimum and maximum distances of `r round(min_dist,2)` and `r round(max_dist,2)`, respectively. This data was used to calculate the C:N ratios by dividing soil organic carbon (SOC) by total nitrogen (N).
 
 ```{r calculate-cn-ratio}
-#| fig-cap: "Distribution of C:N ratio values from LUCAS 2015 samples in Germany."
+#| label: fig-cn-distribution
+#| fig-cap: "Distribution of C:N ratio values derived from LUCAS 2015 samples in Germany."
 #| fig-height: 3
 #| fig-dpi: 200
 
 # first make columns numeric, then add new column with ratio
 lucas <- lucas %>%
-  mutate(N = if_else(N == "< LOD", 0, as.numeric(N)),
+  mutate(N = if_else(N == "< LOD", 0, as.numeric(N)), 
          OC = if_else(OC == "< LOD", 0, as.numeric(OC)),
          cn_ratio = OC / N)
 
@@ -164,12 +193,11 @@ ggplot(lucas, aes(cn_ratio)) +
 
 ```
 
-The distribution of C:N ratios obtained this way was strongly right-skewed, with most values below 10 (Fig. XXX). There was one notable outlier at a ratio of almost 40, but we did not remove it because it helps increases the prediction range of the random forest algorithm. The extreme value most likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
-
+The distribution of C:N ratios obtained this way was strongly right-skewed, with most values below 10 (Fig. @fig-cn-distribution). There was one notable outlier at a ratio of almost 40, but we did not remove it because it helps increases the prediction range of the random forest algorithm. The extreme value most likely did not arise from measuring error since a comparable value can also be seen in the later LUCAS 2018 survey.
 
 ## Covariates
 
-The selection of environmental predictors was largely based on those proposed by @khosravani_soil_2026, who had identified them according to expert knowledge. We slightly modified them when not avoidable due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in Table XXX and in the following we describe how we obtained and processed all predictors more in detail.
+The selection of environmental predictors was largely based on those proposed by @khosravani_soil_2026, who had identified them according to expert knowledge. We slightly modified them due to lacking documentation in the paper or data availability. An overview of the used predictors can be found in Table XXX and in the following we describe how we obtained and processed all predictors more in detail.
 
 
 | Abbreviation | Full name | Unit | Source |
@@ -223,7 +251,7 @@ Land cover dissimilarity was based on the land cover classification by https://z
 
 ```{r lc-and-dissimilarity}
 
-# set option to redo the analysis (takes a few minutes) or load existing raster
+# set option to redo the dissimilarity calculation (takes a few minutes) or load existing raster
 redo_lc_dissim <- FALSE
 
 # set path
@@ -232,7 +260,6 @@ lc_dissim_path <- "data/covariates/lc_dissim.tif"
 # load land cover data and crop to Germany
 land_cover <- rast('data/covariates/land-cover/PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif') %>%
   crop(germany_4326)
-
 
 # obtain LC dissimilarity
 # check if file exists AND redo flag is FALSE --> just load existing raster
@@ -265,24 +292,14 @@ if (file.exists(lc_dissim_path) && !redo_lc_dissim) {
 
 ```
 
-Clay and silt content very poor documentation in paper! there it says from ISRIC; eventually downloaded from SoilGrids (250m resolution) - clay content (g kg-1) - in topsoil ( 0 to 5 cm)
 
-For clay and silt, it was not specified which depth.
+Rasters of clay and silt content (g kg$^{-1}$), pH, and soil water content (SWC) at field capacity  at a 250 m resolution were obtained from SoilGrids (LINK). To approximate the sampling depth of LUCAS measurements (20 cm), we calculated weighted averages of the 0-5 and 5-15 cm layers for the four variables.
 
-We therefore calculated weigthed averages from 0-5 and 5-15 cm values, the depths best matching the LUCAS samples which have a depth up to 20 cm.
+The soil respiration rate in g C m$^{-2}$ y$^{-1}$ at a 1 km resolution was obtained from https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1 
 
-Soil water content (SWC) Vol. water content at -33 kPa from SoilGrids (at field capacity) soilgrids
+For the human footprint, we used a raster of the 2015 human footprint at a 1 km resolution developed by https://doi.org/10.6084/m9.figshare.16571064) [MU et al]
 
-Soil respiration allegedly from ISRIC, but only found link there to https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-soilresp-heterotrophicresp-1928-1 in supplementary materials in g CO2 per m2, but in NASA data g C per m2 per y
-
-
-A global human footprint dataset with a resolution of 1 km was used from https://datadryad.org/dataset/doi:10.5061/dryad.3tx95x6d9.
-
-2015 human footprint
-https://doi.org/10.6084/m9.figshare.16571064) [MU et al]
-
-The Normalized Difference Vegetation Index (NDVI) is an indicator of greenness. 
-NDVI - not specified in paper how exactly calculated (besides GEE) - We used a 3-year growing season median (WHEN TO WHEN?) to capture long-term trends and avoid overrepresentation of weather influences.
+The Normalized Difference Vegetation Index (NDVI) was based on MODIS ... which we retrieved via Google Earth Engine. The NDVI value represents the 3-year growing season (XXX-XXX) mean from 2013 to 2015, in order to capture the long-term vegetation greenness.
 
 ```{r load-covariate-data-2}
 
@@ -307,7 +324,7 @@ clay <- average_rasters('data/covariates/clay_0-5.tif', 'data/covariates/clay_5-
 silt <- average_rasters('data/covariates/silt_0-5.tif', 'data/covariates/silt_5-15.tif') 
 ph <- average_rasters('data/covariates/ph_0-5.tif', 'data/covariates/ph_5-15.tif') / 10
 # soil water content (SWC)
-swc <- average_rasters('data/covariates/swc_0-5.tif', 'data/covariates/swc_5-15.tif')
+swc <- average_rasters('data/covariates/swc_0-5.tif', 'data/covariates/swc_5-15.tif') / 10
 
 # soil respiration
 s_resp <- rast('data/SoilResp_HeterotrophicResp_1928/data/soil_Rs_mean.tif') %>%
@@ -322,11 +339,9 @@ ndvi <- rast('data/covariates/NDVI_Germany_2013_2015.tif')
 
 ```
 
-Once we had obtained the raster data for all predictors, we projected them to the same CRS (EPSG 25832, UTM 32N) and resolution using bilinear resampling. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
+Once we had obtained the raster data for all predictors, we projected them to the same CRS (EPSG 25832, UTM 32N) and resolution (250 m) using bilinear resampling. The reference raster chosen for this alignment was the slope since it already had the target resolution of 250 m.
 
-To account for differences in land cover, we encoded four natural land cover types as dummy variables: cropland, forest, grassland (herbaceous), and cropland.
-
-From the resulting raster stack, we removed pixels corresponding to unsuitable land cover types (water bodies, snow, built-up land).
+To account for differences in land cover, we encoded four natural land cover types as dummy variables: cropland, forest, grassland (herbaceous vegetation), and wetland.
 
 ```{r prepare-raster-stack}
 
@@ -384,7 +399,11 @@ predictor_stack <- mask(predictor_stack, germany)
 
 ```
 
-## Random Forest model
+For a visualization of predictor ranges and (spatial) distributions, please refer to FIG XXX in the appendix.
+
+## Models
+
+In our study, we compared the performance of random forest and cubist machine learning for soil C:N prediction. For this purpose, predictor values were extracted for each LUCAS sampling point. Models were then trained to predict the C:N ratio from these predictors.
 
 ```{r prepare-model-data}
 
@@ -394,25 +413,26 @@ predictor_values <- terra::extract(predictor_stack, lucas)[,-1] # remove ID
 # combine with C:N data and remove unnecessary colums
 data <- cbind(lucas['cn_ratio'], predictor_values) %>%
   drop_na() %>% 
-  # select(!lc_class2) %>%
   st_drop_geometry() 
 
-nrow(data)
 ```
 
+We used k-fold cross-validation (CV) for hyperparameter tuning and estimating accuracy metrics. In k-fold CV, the dataset is split into k approximately equal parts ("folds"), and a model is iteratively fit on k-1 folds while the remaining fold is used for validation. The model accuracy metrics are then obtained by averaging the accuracy metrics for predictions (on the validation fold) across the folds. This CV approach offers a more robust estimate of model accuracy than a single training and testing split.
 
-We used k-fold cross-validation (CV) for hyperparameter tuning and estimating accuracy metrics. , to obtain more robust estimates. In k-fold CV, the dataset is split into k approximately equal parts ("folds"), and a model is iteratively fit on k-1 folds while the remaining fold is used for validation. The model accuracy metrics are then obtained by averaging the accuracy metrics for predictions (on the validation fold) across the folds. This CV approach offers a more robust estimate of model accuracy than a single training and testing split.
+```{r model-cross-validation}
 
-```{r rf-cross-validation}
-
+# set seeds for reproducibility (one for each model run)
 set.seed(123)
+seeds <- vector(mode = "list", length = 11)
+for(i in 1:10) seeds[[i]] <- sample.int(1000, 5)
+seeds[[11]] <- sample.int(1000, 1)
 
 # 10-fold CV (split model into 10 folds, run 10 times, each time, 1 fold is test while remaining 9 are used for training)
 train_control <- trainControl(method = "cv", 
                               number = 10,
+                              seeds = seeds,
                               savePredictions = "final"
                               )
-
 
 rfModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
                  data = data, 
@@ -422,33 +442,31 @@ rfModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
                  trControl = train_control, # implement CV as defined above
                  importance = TRUE) # compute permutation importance
 
-rfModel
-```
-
-We implemented this k-fold CV using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning for the parameter `mtry`, i.e., the number of predictors used at each split, and found the lowest Root Mean Squared Error (RMSE) for `mtry` = `r rfModel$bestTune$mtry`. The number of trees was set to 500.
-
-## Cubist model
-
-The same 10-fold CV was applied for the Cubist model.
-
-```{r cubist-cross-validation}
+# same for cubist
 
 set.seed(123)
+seeds <- vector(mode = "list", length = 11)
+for(i in 1:10) seeds[[i]] <- sample.int(1000, 9)
+seeds[[11]] <- sample.int(1000, 1)
+
+# 10-fold CV (split model into 10 folds, run 10 times, each time, 1 fold is test while remaining 9 are used for training)
+train_control <- trainControl(method = "cv", 
+                              number = 10,
+                              seeds = seeds,
+                              savePredictions = "final"
+                              )
 
 cubModel <- train(cn_ratio ~ ., # C:N ratio as a function of all predictors
                  data = data, 
                  method = "cubist", 
-                 trControl = train_control, # implement CV as defined above for Random Forest
-                 importance = TRUE) # compute permutation importance
+                 trControl = train_control, 
+                 importance = TRUE) 
 
-cubModel
 ```
 
-Hyperparameter tuning showed that `r cubModel$bestTune$committees` committees and `r cubModel$bestTune$neighbors` neighbors led to the lowest RMSE.
+We implemented this k-fold CV using the `caret` \[@caret} package in R, setting k to 10. Caret automatically conducted hyperparameter tuning, and for the parameter `mtry` in random forest, i.e., the number of predictors used at each split, the lowest Root Mean Squared Error (RMSE) was found for `mtry` = `r rfModel$bestTune$mtry`. The number of trees was set to 500. For the cubist model, hyperparameter tuning showed that `r cubModel$bestTune$committees` committees and `r cubModel$bestTune$neighbors` neighbors led to the lowest RMSE. 
 
-## Variable importance
-
-To obtain the relative variable importance scores, a random forest and a cubist model with the optimal hyperparameters were fit to the whole dataset. 
+After the 10-fold CV, a random forest and a cubist model with these optimal hyperparameter values was trained on the full dataset to obtain the relative variable importance scores.
 
 ## Model performance
 
@@ -456,8 +474,8 @@ Following @khosravani_soil_2026, we evaluated the model accuracy based on four m
 
 -   coefficient of determination (R$^2$), which indicates how much of the variance can be explained by the model
 -   root mean squared error (RMSE), which measures XXX
--   concordance correlation coefficient (CCC), which quantifies the agreement between observed and predicted values
 -   Bias, which shows whether the model systematically over- or underestimates the target variable
+-   concordance correlation coefficient (CCC), which quantifies the agreement between observed and predicted values
 
 We followed the approach of @zhou_prediction_2021 and calculated accuracy metrics as the mean from the 10-fold cross-validation predictions to have more robust estimates of model accuracy.
 
@@ -476,7 +494,8 @@ rf_preds_accuracy <- rf_preds %>%
     Bias = mean(obs - pred),
     CCC = (2 * cor(rf_preds$obs, rf_preds$pred) * sd(rf_preds$obs) * sd(rf_preds$pred)) /
   (var(rf_preds$obs) + var(rf_preds$pred) + (mean(obs) - mean(pred))^2)
-)
+) %>% 
+  arrange(Resample) # make sure it is ordered by fold
 
 # same for cubist
 cubist_preds <- cubModel$pred %>%
@@ -490,7 +509,8 @@ cubist_preds_accuracy <- cubist_preds %>%
     Bias = mean(obs - pred),
     CCC = (2 * cor(cubist_preds$obs, cubist_preds$pred) * sd(cubist_preds$obs) * sd(cubist_preds$pred)) /
   (var(cubist_preds$obs) + var(cubist_preds$pred) + (mean(obs) - mean(pred))^2)
-)
+) %>% 
+  arrange(Resample) 
 
 # combine in one df
 rf_preds_accuracy$Model <- "Random Forest"
@@ -516,17 +536,32 @@ accuracies_summarized <- accuracies %>%
   
 ```
 
-To evaluate whether the models' performance was significantly different, we conducted a paired T-test.
-
 ```{r paired-t-test}
-t_test_r2 <- t.test(accuracies$R2 ~ accuracies$Model)
 
-t_test_rmse <- t.test(accuracies$RMSE ~ accuracies$Model)
+# for R2
+shapiro_r2 <- shapiro.test(rf_preds_accuracy$R2 - cubist_preds_accuracy$R2)
+t_test_r2 <- t.test(rf_preds_accuracy$R2, cubist_preds_accuracy$R2, paired = TRUE)
+
+
+# for RMSE
+shapiro_rmse <- shapiro.test(rf_preds_accuracy$RMSE - cubist_preds_accuracy$RMSE)
+t_test_rmse <- t.test(rf_preds_accuracy$RMSE, cubist_preds_accuracy$RMSE, paired = TRUE)
+
+# for Bias
+shapiro_bias <- shapiro.test(rf_preds_accuracy$Bias - cubist_preds_accuracy$Bias)
+t_test_bias <-t.test(rf_preds_accuracy$Bias, cubist_preds_accuracy$Bias, paired = TRUE)
+
+# for CCC
+shapiro_ccc <- shapiro.test(rf_preds_accuracy$CCC - cubist_preds_accuracy$CCC)
+t_test_ccc <-t.test(rf_preds_accuracy$CCC, cubist_preds_accuracy$CCC, paired = TRUE)
+
 ```
+
+To evaluate whether the models' performance was significantly different, we conducted paired T-tests on the accuracy metric distributions across the CV folds. A Shapiro-Wilk test was used beforehand to ensure an approximately normal distribution of differences between the paired metrics (p = `r round(shapiro_r2$p.value,3)` for R$^2$, p = `r round(shapiro_rmse$p.value,3)` for RMSE, p = `r round(shapiro_bias$p.value,3)` for Bias, p = `r round(shapiro_ccc$p.value,3)` for CCC). However, it needs to be acknowledged that conducting a paired t-Test on the values from 10-fold CV might have an increased risk of Type 1 error (suggesting a significant difference when there is none), because while the test data the metrics are based on is independent, the training data is not completely [REF Dietterich].
 
 ## Mapping
 
-To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosravani_soil_2026 did. Due to computational constraints, we used 30 iterations for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data (representing apprximately XXX% of samples) and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, we calculated the mean predicted C:N as well as uncertainty map based on the standard deviation. To investigate possible spatial patterns between the RF and Cubist predictions, we also computed a difference map by substracting the mean cubist from the mean RF map.
+To obtain mean and uncertainty maps, we used a bootstrapping approach as @khosravani_soil_2026 did. Due to computational constraints, we used 30 iterations for this process. In each iteration, a cubist and a random forest model were trained on a bootstrapped sample of the data (representing on average 63.2% of the complete data) and then used to make spatial predictions based on the predictor stack. From the resulting 30 maps per model, we calculated the mean predicted C:N as well as an uncertainty map based on the standard deviation. To investigate possible spatial patterns between the RF and Cubist predictions, we also computed a difference map by substracting the mean cubist from the mean RF map.
 
 ```{r bootstrapping}
 
@@ -587,10 +622,6 @@ if (redo_bootstrap) {
   }
 }
 
-```
-
-```{r}
-
 # load bootstrapping map predictions
 path <- 'data/bootstrap_prediction_layers/'
 rf_boot_stack <- rast(paste0(path, list.files(path, pattern='rf*')))
@@ -612,15 +643,14 @@ diff_map_abs <- abs(diff_map)
 
 ```
 
-e.g., https://www.sciencedirect.com/science/article/pii/S0048969720361908 created 100 maps
 
 ## Ecological plausibility
 
-To illustrate a possible use case for C:N maps, we tested whether predicted C:N ratios in grasslands were significantly higher if they were located in protected areas. 
+To illustrate a possible use case for C:N maps and evaluate the ecological plausibility of the spatial predictions, we tested whether predicted C:N ratios in grasslands were significantly higher if they were located in protected areas. 
 
-For this purpose, we used a shapefile of Natura 2000 areas obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4.
+For this purpose, we used a shapefile of Natura 2000 areas -- the major network of protected areas in Europe -- obtained from https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4, which we rasterized using the reference slope grid.
 
-We used a separate grassland map from XXX since the land cover we used did not have it as a distinct class.
+A separate grassland map from XXX was used since the land cover we used for the predictor stack did not include it as a distinct class.
 
 ```{r prepare-natura-grassland-df}
 
@@ -644,6 +674,9 @@ grassland_ger <- grassland_ger == 1
 
 # reproject to match raster stack grid (250 m) using mode resampling --> only classify as grassland if majority of 100 pixels are grassland 
 grassland_ger <- project(grassland_ger, slope, method='mode')
+
+# make two masks
+# grassland_natura_mask <- mask(grassland_ger)
 
 # function to mask rasters by grassland and natura, and convert to dataframe
 # function developed by Claude Sonnet 4.6
@@ -690,27 +723,63 @@ grass_natura_df <- create_cn_boxplot_df(
   filter(grassland == TRUE)
 ```
 
+In order to compare the differences statistically, a Mann-Whitney U test was conducted to test for significance, and Cliff's Delta was calculated to obtain the effect size. For the latter, a random subset of 10,000 protected and unprotected pixels each was used due to computational limitations.
+
+```{r stat-tests-grassland-natura}
+
+### for random forest
+
+# filter
+grass_natura_df_rf <- filter(grass_natura_df, grass_natura_df$model == 'RF')
+
+# Mann–Whitney U
+mwu_rf <- wilcox.test(cn_ratio ~ protected, data = grass_natura_df_rf)
+
+# get effect size (on random sample)
+set.seed(123)
+sample_df <- grass_natura_df_rf %>%
+  dplyr::group_by(protected) %>%
+  dplyr::slice_sample(n = 10000)
+cliff_rf <- cliff.delta(cn_ratio ~ protected, data = sample_df)
+
+### same for cubist
+
+# filter
+grass_natura_df_cub <- filter(grass_natura_df, grass_natura_df$model == 'Cubist')
+
+# Mann–Whitney U
+mwu_cub <- wilcox.test(cn_ratio ~ protected, data = grass_natura_df_cub)
+
+# get effect size
+sample_df <- grass_natura_df_cub %>%
+  dplyr::group_by(protected) %>%
+  dplyr::slice_sample(n = 10000)
+cliff_cub <- cliff.delta(cn_ratio ~ protected, data = sample_df)
+```
+
 # Results
 
 ## Model performance
 
--   models had very similar performance
--   RF slightly higher R2 and lower RMSE, see @accuracy-table
--   RF tends to overestimate values (slightly negative bias), especially lower observed values
--   cubist tends to underestimate (positive bias)
--   cubist had higher CCC, also visible in @plot-obs-vs-pred
--   
+Random forest and cubist showed similar accuracy in the 10-fold cross-validation (@acc-table). RF had a marginally lower error (RMSE) and captured slightly more of the variability (R$^2$) than the cubist model, but the differences were not statistically different (t(9) = `r round(t_test_rmse$statistic[['t']], 2)`, p = `r round(t_test_rmse$p.value, 2)` for RMSE; t(9) = `r round(t_test_r2$statistic[['t']], 2)`, p = `r round(t_test_r2$p.value, 2)` for R$^2$). 
 
-The paired T-tests revealed that the two models did not differ significantly in their R$^2$ (p = XXX) or RMSE (p = XXX).
+The cubist model had a higher mean CCC value, however, which was also reflected in Figure @fig-obs-vs-pred, where points were on average closer to the 1:1 line for cubist. This difference was statistically significant (t(9) = `r round(t_test_ccc$statistic[['t']], 2)` p < 0.001)
+
+A notable difference was found in the Bias, which showed that RF tended to overestimate C:N more often while cubist tended to underestimate it (see also Table XXX in appendix), but both only to a small extent. This difference was also statistically significant (t(9) = `r round(t_test_bias$statistic[['t']], 2)` p = `r round(t_test_bias$p.value, 3)`).
+
+Most metrics had low standard deviations, especially CCC, indicating stable model performance across folds, i.e., on different training and validation data. The highest relative standard deviation was found for Bias, which suggests that models trained on certain samples had a stronger systematic over- or underestimation.
+
 
 ```{r accuracy-table}
+#| label: acc-table
 #| tbl-cap: "Accuracy metrics of the two models. Values indicate mean and standard deviation from the 10-fold cross-validation."
 
 knitr::kable(accuracies_summarized)
 ```
 
 ```{r plot-obs-vs-pred}
-#| fig-cap: "Observed vs. predicted values for Random Forest and Cubist models. Predicted values are from out-of-box prediction during the 10-fold CV"
+#| label: fig-obs-vs-pred
+#| fig-cap: "Observed vs. predicted values for Random Forest and Cubist models. Predicted values are from out-of-box prediction during the 10-fold CV. Count refers to the number of sampling points represented by each plotted hexagon"
 
 # two-panel plot with RF and cubist
 
@@ -719,6 +788,9 @@ p1 <- ggplot(rf_preds, aes(obs, pred) ) +
   geom_hex(bins = 70) +
   scale_fill_continuous(limits=c(0,30), type = "viridis", name = 'count') +
   theme_bw() +
+  xlab("observed") +
+  ylab("predicted") + 
+  ggtitle("random forest") +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
   coord_equal() 
 
@@ -726,198 +798,18 @@ p2 <- ggplot(cubist_preds, aes(obs, pred) ) +
   geom_hex(bins = 70) +
   scale_fill_continuous(limits=c(0,30), type = "viridis", name = 'count') +
   theme_bw() +
+  xlab("observed") +
+  ylab("predicted") + 
+  ggtitle("cubist") +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
-  coord_equal() #+
-  # xlim(5, 20) +
-  # ylim(5,20)
+  coord_equal() 
 
 (p1 / p2) + plot_layout(guides = "collect")
 
 ```
 
-```{r correlation-rf-cubist}
-corr_rf_cub <- cor(arrange(rfModel$pred, rowIndex)['pred'], arrange(cubModel$pred, rowIndex)['pred'])
-```
-
-Random forest and cubist predictions had a correlation coefficient of `r round(corr_rf_cub,3)`.
-
-## Maps
-
-```{r mean-maps}
-
-# Determine shared limits
-zlim <- range(c(values(rf_mean_map), values(cub_mean_map)), na.rm = TRUE)
-
-p1 <- ggplot() +
-  geom_spatraster(data = rf_mean_map) +
-  scale_fill_viridis_c(limits = zlim, name = "C:N") +
-  ggtitle("Random Forest") +
-  theme_minimal()
-
-p2 <- ggplot() +
-  geom_spatraster(data = cub_mean_map) +
-  scale_fill_viridis_c(limits = zlim, name = "C:N") +
-  ggtitle("Cubist") +
-  theme_minimal()
-
-# Combine with patchwork, collecting the shared legend
-(p1 | p2) + plot_layout(guides = "collect")
-```
-
-```{r uncertainty-maps}
-
-# Determine shared limits
-zlim <- range(c(values(rf_sd_map), values(cub_sd_map)), na.rm = TRUE)
-
-p1 <- ggplot() +
-  geom_spatraster(data = rf_sd_map) +
-  scale_fill_viridis_c(limits = zlim, name = "C:N standard deviation") +
-  ggtitle("Random Forest") +
-  theme_minimal()
-
-p2 <- ggplot() +
-  geom_spatraster(data = cub_sd_map) +
-  scale_fill_viridis_c(limits = zlim, name = "C:N standard deviation") +
-  ggtitle("Cubist") +
-  theme_minimal()
-
-# Combine with patchwork, collecting the shared legend
-(p1 | p2) + plot_layout(guides = "collect")
-
-```
-
-```{r}
-# sd_rf_masked <- mask(rf_sd_map, suitable_lc)
-mean_sd_rf <- mean(values(rf_sd_map), na.rm=TRUE)
-sd_sd_rf <- sd(values(rf_sd_map), na.rm = TRUE)
-
-# sd_cub_masked <- mask(cub_sd_map, suitable_lc)
-mean_sd_cub <- mean(values(cub_sd_map), na.rm=TRUE)
-sd_sd_cub <- sd(values(cub_sd_map), na.rm = TRUE)
-```
-
-
-With a mean standard deviation of `r round(mean_sd_rf, 2)` ± `r round(sd_sd_rf,2)`, random forest predictions were on average less uncertain than those from cubist, which had a mean standard deviation of `r round(mean_sd_cub, 2)` ± `r round(sd_sd_cub,2)`.
-
-Most extreme standard deviation in the Cubist map were located where the random forest did not make predictions due to missing data, mostly where large water bodies are found.
-
-
-```{r plot-difference-map}
-#| fig-cap: "Difference map"
-
-# Define breakpoints and colors
-breaks <- c(minmax(diff_map)[1], -1, 1, minmax(diff_map)[2])
-
-colors <- c("red",        # below -2
-            "lightgrey",  # between -2 and 2
-            "blue")       # above 2
-
-# Plot with custom colors
-plot(diff_map, breaks = breaks, col = colors, legend = TRUE)
-
-# ggplot() +
-#   geom_spatraster(data = diff_map) +
-#   scale_fill_viridis_c(name = "C:N difference") +
-#   ggtitle("Difference map") +
-#   theme_minimal()
-
-```
- 
- Red (negative values) indicates that cubist prediction > RF prediction, whereas blue (positive values) indicates higher RF predictions.
-
-A simple correlation matrix (see Appendix) showed no large correlation between either relative(??? with + or -) or absolute difference and any of the predictors. Absolute difference were moderately linearly correlated with standard deviation (r = 0.37 for RF and r = 0.27 for cubist).
-
-```{r predictions-by-land-cover}
-
-grassland_preds <- mask(rf_mean_map, subst(grassland, 0, NA))
-forest_preds <- mask(rf_mean_map, subst(forest, 0, NA))
-crop_preds <- mask(rf_mean_map, subst(cropland, 0, NA))
-wetland_preds <- mask(rf_mean_map, subst(wetland, 0, NA))
-
-boxplot(cbind(values(grassland_preds), values(forest_preds), values(crop_preds), values(wetland_preds)))
-
-grassland_uncert <- mask(rf_sd_map, subst(grassland, 0, NA))
-forest_uncert <- mask(rf_sd_map, subst(forest, 0, NA))
-crop_uncert <- mask(rf_sd_map, subst(cropland, 0, NA))
-wetland_uncert <- mask(rf_sd_map, subst(wetland, 0, NA))
-
-show_mean_sd <- function(raster) {
-  raster_val <- values(raster)
-  mean_val <- mean(raster_val, na.rm = TRUE)
-  sd_val <- sd(raster_val, na.rm = TRUE)
-  return(paste(round(mean_val, 2), '±', round(sd_val,2)))
-}
-
-```
-
-random forest:
-
-grassland mean uncertainty `r show_mean_sd(grassland_uncert)`
-
-forest mean uncertainty `r show_mean_sd(forest_uncert)`
-
-crop mean uncertainty `r show_mean_sd(crop_uncert)`
-
-wetland mean uncertainty `r show_mean_sd(wetland_uncert)`
-
-```{r}
-grassland_uncert <- mask(cub_sd_map, subst(grassland, 0, NA))
-forest_uncert <- mask(cub_sd_map, subst(forest, 0, NA))
-crop_uncert <- mask(cub_sd_map, subst(cropland, 0, NA))
-wetland_uncert <- mask(cub_sd_map, subst(wetland, 0, NA))
-```
-
-cubist:
-
-grassland mean uncertainty `r show_mean_sd(grassland_uncert)`
-
-forest mean uncertainty `r show_mean_sd(forest_uncert)`
-
-crop mean uncertainty `r show_mean_sd(crop_uncert)`
-
-wetland mean uncertainty `r show_mean_sd(wetland_uncert)`
-
-
-```{r}
-#| eval: false
-
-lucas_pred <- terra::extract(c(rf_mean_map, cub_mean_map, rf_sd_map, cub_sd_map), lucas)[,-1] %>%
-  cbind(lucas[c('cn_ratio', 'LC0_Desc')]) %>%
-  rename(
-    rf_mean = mean,
-    cub_mean = mean.1,
-    rf_sd = sd,
-    cub_sd = sd.1,
-    land_cover = LC0_Desc
-  ) %>%
-  mutate(
-    rf_resid = cn_ratio - rf_mean,
-    cub_resid = cn_ratio - cub_mean
-  )
-
-lucas_pred_long <- lucas_pred %>%
-  pivot_longer(
-    cols         = c(rf_mean, cub_mean, rf_resid, cub_resid, rf_sd, cub_sd),
-    names_to     = c("model", ".value"),
-    names_pattern = "(.+)_(mean|resid|sd)"
-  )
-
-ggplot(lucas_pred_long, aes(x=model, y=mean, fill = model)) +
-  geom_boxplot() +
-  facet_wrap(~land_cover)
-
-ggplot(lucas_pred_long, aes(x=model, y=sd, fill = model)) +
-  geom_boxplot() +
-  facet_wrap(~land_cover)
-
-ggplot(lucas_pred_long, aes(x=model, y=resid, fill = model)) +
-  geom_boxplot() +
-  facet_wrap(~land_cover)
-
-```
 
 ## Variable importance
-
 
 ```{r variable-importance}
 
@@ -958,67 +850,257 @@ ggplot(imp_df, aes(variable, importance, fill=model)) +
   ylab('Relative importance [%]')
 ```
 
-Ph was by far the most important predictor in both models. NDVI was ranked second for both.
+pH was by far the most important predictor in both models, while NDVI was ranked second. The next most important predictors for RF was the forest dummy, which had a lower rank for cubist. While not identical in their exact ranking, both models had many of the same variables with moderate importance (between 20 and 45%). Notably, soil water content (SWC), total annual precipitation, and silt content, which had a rather low ranking for RF, were among the most important variables for random forst. The least important numeric predictors in both models were soil respiration and aspect. The dummy variables for cropland, wetland, and grassland also ranked low.
 
-The least important numeric predictors were soil respiration and aspect. 
+## Spatial predictions
+
+```{r}
+#| label: plot-mean-maps
+#| fig-cap: "C:N ratio across Germany predicted by random forest and cubist machine learning. Values represent mean prediction from 30 bootstrapping iterations"
+
+# determine shared value limits
+zlim <- range(c(values(rf_mean_map), values(cub_mean_map)), na.rm = TRUE)
+
+p1 <- ggplot() +
+  geom_spatraster(data = rf_mean_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N") +
+  ggtitle("Random Forest") +
+  theme_minimal()
+
+p2 <- ggplot() +
+  geom_spatraster(data = cub_mean_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N") +
+  ggtitle("Cubist") +
+  theme_minimal()
+
+# combine plots with shared colorbar
+(p1 | p2) + plot_layout(guides = "collect")
+```
+
+The mean predicted C:N ratios derived from bootstrapping showed similar spatial patterns for random forest and cubist prediction (@plot-mean-maps). Both models suggest distinct areas with elevated and low ratios. Higher values were mostly located across North-Eastern Germany. Lower values were found near coasts and in the South-East. Overall, random forest had a higher mean of predicted values (`r show_mean_sd(rf_mean_map)`) than cubist (`r show_mean_sd(cub_mean_map)`), and its predicted value range was higher (`r round(min(values(rf_mean_map), na.rm=TRUE),2)` - `r round(max(values(rf_mean_map), na.rm=TRUE),2)`) compared to cubist (`r round(min(values(cub_mean_map), na.rm=TRUE),2)` - `r round(max(values(cub_mean_map), na.rm=TRUE),2)`).
+
+```{r}
+#| label: plot-sd-maps
+#| fig-cap: "C:N ratio across Germany predicted by random forest and cubist machine learning. Values represent standard deviation of predictions from 30 bootstrapping iterations"
 
 
+# Determine shared limits
+zlim <- range(c(values(rf_sd_map), values(cub_sd_map)), na.rm = TRUE)
 
-## Ecological plausibility
+p1 <- ggplot() +
+  geom_spatraster(data = rf_sd_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N standard deviation") +
+  ggtitle("Random Forest") +
+  theme_minimal()
 
-```{r compare-natura-boxplot}
+p2 <- ggplot() +
+  geom_spatraster(data = cub_sd_map) +
+  scale_fill_viridis_c(limits = zlim, name = "C:N standard deviation") +
+  ggtitle("Cubist") +
+  theme_minimal()
 
-
-ggplot(grass_natura_df, aes(protected, cn_ratio, fill = model)) +
-  geom_boxplot() 
-
-grass_natura_df_rf <- filter(grass_natura_df, grass_natura_df$model == 'RF')
-
-# anova_rf <- aov(cn_ratio ~ protected, data = grass_natura_df_rf)
-# summary(anova_rf)
-
-# Mann–Whitney U
-wilcox.test(cn_ratio ~ protected, data = grass_natura_df_rf)
-
-# get effect size
-library(effsize)
-cliff.delta(cn_ratio ~ protected, data = grass_natura_df_rf)
+# Combine with patchwork, collecting the shared legend
+(p1 | p2) + plot_layout(guides = "collect")
 
 ```
 
-significantly higher C:N in protected grassland (Mann–Whitney U, p < 0.01), though with small effect size (Cliff's Delta -0.167)
+With a mean standard deviation of `r show_mean_sd(rf_sd_map)`, random forest predictions were on average less uncertain than those from cubist, which had a mean standard deviation of `r show_mean_sd(cub_sd_map)`. Especially for the cubist prediction, the spatial pattern of uncertainty resembled the pattern of higher predicted C:N values (Fig. @plot-sd-maps). Maximum standard deviations in the Cubist map were located where the random forest did not make predictions due to missing data, mostly where large water bodies are located.
+
+```{r}
+#| label: diff-map
+#| fig-cap: "Difference map between random forest and cubist predictions. Blue values indicate higher random forest predictions while red values indicate higher cubist predictions. Computed from the mean maps from 30 bootstrapping iterations."
+
+diff_df <- as.data.frame(diff_map, xy = TRUE)
+
+# plot
+ggplot(diff_df) +
+  geom_spatraster(data = diff_map) +
+  scale_fill_gradient2(
+    low = "#b2182b",
+    mid = "white",
+    high = "#2166ac",
+    midpoint = 0,
+    limits = c(-4, 4),
+    name = "Prediction\nDifference"
+  ) +
+  theme_minimal()
+
+# get percentage of certain difference ranges
+vals <- values(diff_map)
+total <- sum(!is.na(vals))
+fraction_small_diff <- sum(vals >= -1 & vals <= 1, na.rm = TRUE) / total
+fraction_very_small_diff <- sum(vals >= -0.5 & vals <= 0.5, na.rm = TRUE) / total
+fraction_medium_diff <- sum(vals >= -2 & vals <= 2, na.rm = TRUE) / total
+fraction_rf_higher <- sum(vals > 0, na.rm = TRUE) / total
+fraction_cub_higher <- sum(vals < 0, na.rm = TRUE) / total
+
+```
+ 
+The mean difference in predictions between the two models was `r show_mean_sd(diff_map)`, and ranged from `r round(min(values(diff_map), na.rm = TRUE), 2)` to `r round(max(values(diff_map), na.rm = TRUE), 2)`. Most pixels (`r round(fraction_very_small_diff * 100, 2)`) had only small absolute differences of up to 0.5. Overall, random forest had higher predictions in a majority of pixels (`r round(fraction_rf_higher * 100, 2)`), see Fig. @diff-map.
+
+```{r}
+#| label: plot-by-land-cover
+#| fig-cap: "Distribution of mean and standard deviation (uncertainty) of predicted C:N by land cover class. Values represent mean/standard deviation from 30 bootstrapping iterations."
+
+# make data frame
+df <- tibble(
+  grassland = values(grassland)[,1],
+  forest = values(forest)[,1],
+  cropland = values(cropland)[,1],
+  wetland = values(wetland)[,1],
+  rf_mean = values(rf_mean_map)[,1],
+  rf_sd = values(rf_sd_map)[,1],
+  cub_mean = values(cub_mean_map)[,1],
+  cub_sd = values(cub_sd_map)[,1]
+)
+
+df <- df %>%
+  mutate(
+    landcover = case_when(
+      grassland == 1 ~ "Grassland",
+      forest == 1 ~ "Forest",
+      cropland == 1 ~ "Cropland",
+      wetland == 1 ~ "Wetland",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(landcover))
+
+# reorganize df for easier plotting
+df_plot <- bind_rows(
+  df %>% transmute(landcover, value = rf_mean, model = "RF", type = "Mean"),
+  df %>% transmute(landcover, value = cub_mean, model = "Cubist", type = "Mean"),
+  df %>% transmute(landcover, value = rf_sd, model = "RF", type = "Uncertainty"),
+  df %>% transmute(landcover, value = cub_sd, model = "Cubist", type = "Uncertainty")
+)
+
+# plot
+ggplot(df_plot, aes(x = landcover, y = value, fill = model)) +
+  geom_boxplot(outlier.size = 0.3) +
+  facet_wrap(~type, scales = "free_y", ncol=1) +
+  labs(
+    x = "Land cover type",
+    y = "",
+    fill = "Model"
+  ) +
+  theme_minimal()
+
+```
+
+Both models mostly captured the same ranking of land cover types in terms of mean prediction and uncertainty (Fig @plot-by-land-cover). Highest mean values were found in forests, which also had the highest uncertainty. Wetlands had a comparable level of uncertainty, as well as the second highest mean C:N. Third ranked in both aspects were grasslands and lastly cropland. The boxplot highlighted again how random forest overall had a lower uncertainty, with cubist values often exhibiting larger ranges.
+
+## Ecological plausibility
+
+```{r}
+#| label: fig-natura-boxplot
+#| fig-cap: "Distribution of predicted values in grasslands within and outside Natura 2000 protected areas. Values at the top show mean ± standard deviation. C:N values refer to the mean derived from 30 bootstrapping iterations."
+
+# compute mean and sd per group
+summary_df <- grass_natura_df %>% 
+  group_by(model, protected) %>%
+  summarise(
+    label = glue("{round(mean(cn_ratio), 2)} ± {round(sd(cn_ratio), 2)}"),
+    mean = mean(cn_ratio),
+    y = max(cn_ratio) * 1.05,   # position above box
+    .groups = "drop"
+  )
+
+# plot
+ggplot(grass_natura_df, aes(protected, cn_ratio, fill = model)) +
+  geom_boxplot(position = position_dodge(width = 0.85)) +
+  geom_text(
+    data = summary_df,
+    aes(label = label, y = y, group = model),
+    position = position_dodge(width = 0.85),
+    size = 3
+  )
+
+```
+
+Both models predicted slightly higher C:N ratios in Natura 2000 protected grasslands than in unprotected grasslands (Fig. @fig-natura-boxplot). The difference in means was slightly higher for RF (`r round(summary_df$mean[4] - summary_df$mean[3],2)`) than for cubist (`r round(summary_df$mean[2] - summary_df$mean[1],2)`). The differences were found to be significant in both models (Mann–Whitney U, p < 0.01), but with a small effect size for random forest (Cliff's Delta `r round(cliff_rf$estimate, 3)`) and negligible effect size for cubist (Cliff's Delta `r round(cliff_cub$estimate, 3)`).
 
 # Discussion
 
-// Diskussion (methodisch + inhaltlich + Literaturvergleich + Limitationen)
+## Model performance
 
-## Model accuracy
+The predictive performance achieved in this study (Random Forest: RMSE = 2.74 ± 0.27, R² = 0.603 ± 0.07, CCC = 0.75 ± 0.001, Bias = −0.06 ± 0.21; Cubist: RMSE = 2.76 ± 0.25, R² = 0.597 ± 0.07, CCC = 0.76 ± 0.001, Bias = 0.03 ± 0.21) is closely comparable to the test metrics reported by @khosravani_soil_2026, who achieved R² = 0.63, CCC = 0.76, RMSE = 2.55 and Bias = −0.02 for C:N prediction across Germany using a Cubist-based approach combined with bootstrapping. This close agreement suggests that similar levels of predictive performance can be achieved across different modelling approaches when applied to comparable datasets and spatial scales.
 
--   slightly lower than reference paper for both models, even though we used the same input data. However, due to poor documentation, we Furthermore, the authors did not specify how they obtained their accuracy metrics, so they might only represent measures for only favorable training-testing split, while our metrics provide a more robust estimate due to th 10-fold cross-validation.
+Despite this similarity, the evaluation metrics reveal subtle but consistent differences in model behaviour. The slightly lower RMSE and higher R² of Random Forest indicate a marginally better global fit, whereas Cubist shows a slightly higher concordance with observed values (CCC). These differences reflect known characteristics of the algorithms: Random Forest stabilises predictions through ensemble averaging, while Cubist combines rule-based partitioning with local linear models, which may better preserve local relationships [@khaledian_selecting_2020; @wadoux_machine_2020] (Khaledian & Miller, 2020; Wadoux et al., 2020).
 
-The ideal way of validating our map results would be through additional random or strategic sampling (Wadoux ref). This is often not possible due to cost and time constraints. For not strongly clustered points, cross-validation can also provide nearly unbiased estimates of model accuracy, though they never allow you to make certain inferences about the true population (you only stay in your sampled data) (wadoux ref).
+Bias patterns further highlight systematic differences between the models. Random Forest exhibited a slight negative bias (−0.06 ± 0.21), indicating a tendency to overestimate C:N values, whereas Cubist showed a slight positive bias (0.03 ± 0.21), suggesting a tendency towards underestimation. Although small in magnitude, these deviations were statistically significant and indicate consistent differences in how both models represent the distribution of C:N values. This is particularly relevant for ratio-based variables, where small deviations in the prediction of carbon or nitrogen can propagate into the resulting ratio.
 
-## Environmental predictors
+In contrast, @ballabio_mapping_2019 reported substantially higher predictive performance, with an R² of 0.91 for the C:N ratio at the European scale based on LUCAS data. Such an outstanding level of model fit is likely related to the use of Gaussian process regression in combination with a comprehensive set of environmental covariates, including remote sensing predictors, which provide spatially continuous information on environmental gradients and have been shown to support large-scale digital soil mapping [@hong_path_2026; @radocaj_open_2024] (Radočaj et al., 2024; Hong et al., 2025). However, these high values should be interpreted in light of differences in modelling framework, predictor composition and spatial support, all of which can strongly influence reported performance metrics.
 
-Identical to the results by @khosravani_soil_2026, pH was also by far the most important predictor in both our models.
+More generally, the interpretation of performance metrics requires careful consideration. As emphasized by @wadoux_spatial_2021, cross-validation-based accuracy measures primarily reflect model performance under the given sampling design and may not provide an unbiased estimate of map accuracy across the full target domain. Nevertheless, when sampling locations are not strongly clustered and reasonably represent the environmental conditions of the study area, cross-validation estimates can still approximate true predictive accuracy relatively well. In this context, the reported RMSE, R², CCC and bias values are most useful for the relative comparison between Random Forest and Cubist, while a fully unbiased assessment of map accuracy would require an independent, probability-based validation dataset collected after model development, for example through stratified random sampling across land-use types and environmental gradients, as proposed by @wadoux_spatial_2021.
 
-A notable difference was the importance of NDVI. While @khosravani_soil_2026 had a relative importance of \<5% for this predictor, in our models, it was the second most important covariate. However, it needs to be noted that it was not clear how @khosravani_soil_2026 had computed the NDVI map. We wanted to capture it as a long-term indicator of productivity by using a 3-year growing-season median, which seemed to work well.
+## Variable importance
 
-A controversial (?) and surprising choice by @khosravani_soil_2026 was to include land cover dissimilarity rather than land cover classes, which they did not explain nor document properly how it was derived. 
-// What might LC dissimilarity really tell us? How could it be related to C:N ratio
+Across both modelling approaches, soil pH and NDVI emerged as the dominant predictors, with identical ranking positions in Random Forest and Cubist. In Cubist, pH accounted for the highest relative importance (100%), whereas NDVI contributed more strongly in Random Forest. The third-ranked numerical predictor differed between models, with soil water content in cubist and latitude in random forest.
 
-*But does NDVI affect the C:N ratio directly or is it more likely to be a proxy for some other property?*
+The prominence of soil pH aligns with @khosravani_soil_2026 and is consistent with its well-established role in regulating key biogeochemical processes relevant to soil stoichiometry. By contrast, the synthesis by @hong_path_2026 reported comparatively low importance of pH across studies, underscoring the context dependency of variable-importance patterns.
 
-## Limitations
+The consistently high contribution of NDVI in the present study represents a key result. As a proxy for vegetation productivity and biomass dynamics, NDVI links aboveground processes to soil organic matter inputs. Its lower importance in @khosravani_soil_2026 may be attributable to differences in predictor construction, as the multi-year growing-season median applied here likely reduces short-term variability and enhances the representation of stable vegetation–soil interactions. This interpretation is consistent with @pouladi_mapping_2019, where NDVI was included among the most frequently used and relevant remote-sensing predictors in cubist- and random-forest-based soil mapping, forming part of the key environmental covariates across models. It is further supported by @wang_mapping_2025, who demonstrated the strong predictive contribution of multi-temporal optical and radar data for soil C:N mapping.
 
--   WorldClim data from 1970 to 2000 - climate change might already have had an effect by 2018
--   
+Despite the central role of microbial processes in soil C:N dynamics [@zechmeister-boltenstern_application_2015], soil respiration exhibited low importance in both the present study and the modelling framework of @khosravani_soil_2026, with substantially lower contributions in Cubist than in Random Forest. This pattern likely reflects the high temporal variability and environmental sensitivity of respiration-related microbial processes, which limits their usefulness as stable spatial predictors [@davidson_temperature_2006; @chernov_dynamics_2020]. In addition, the stronger contribution in Random Forest may indicate its greater capacity to capture weak, non-linear and interaction-driven signals compared to the more structure-constrained Cubist approach.
+
+Land-cover effects differed between models: forest and cropland were relevant in both, whereas grassland and wetland contributed only in Random Forest. This pattern likely reflects both predictor representation and model structure. While categorical variables capture discrete classes, land-cover dissimilarity metrics used by @khosravani_soil_2026 represent spatial heterogeneity more continuously. In addition, variable-importance measures are model-specific and sensitive to predictor correlation [@strobl_bias_2007; @strobl_conditional_2008; @wadoux_machine_2020], limiting direct comparability between algorithms.
+
+Taken together, these findings indicate that predictor importance does not follow a universal hierarchy but reflects the interaction of environmental conditions, covariate design and modelling approach. Accordingly, variable-importance metrics should be interpreted as indicators of predictive relevance rather than direct measures of process importance.
+
+## Spatial patterns
+
+*Large-scale spatial consistency and general plausibility*
+
+The spatial predictions of soil C:N ratios revealed consistent large-scale gradients across Germany, with both models capturing patterns that broadly align with established controls of soil stoichiometry. Predicted values ranged from 7.40 to 24.62 for Random Forest and from 6.45 to 22.47 for Cubist, falling within the general magnitude reported in previous studies. In particular, @khosravani_soil_2026 reported comparable national-scale C:N ranges for Germany (Cubist: ~8–20), with most values occurring within a moderate range typical for mineral soils and higher values associated with forested and organic-rich environments. This suggests that both approaches are capable of reproducing broad-scale C:N distributions when key environmental predictors are included [@hong_path_2026, @zhou_prediction_2021].
+
+*Land-cover-specific patterns and ecological interpretation (tentative)*
+
+Across land-cover types, preliminary patterns indicate higher C:N ratios in forest and wetland systems compared to cropland, while grassland soils appear to show intermediate but variable values. If confirmed by the final summary statistics, these patterns would be consistent with established ecological mechanisms such as litter-driven organic matter inputs, reduced decomposition rates and management-related variability.
+
+*Range compression and limitations of ML predictions*
+
+A central pattern emerging from our results is the systematic compression of the predicted C:N range. Both models produced a narrower range compared to the observed soil data, indicating a tendency to underestimate variability. This behaviour is consistent with previous findings that machine-learning approaches tend to smooth extreme values and regress predictions towards the mean [@hong_path_2026, @sakhaee_spatial_2024].
+
+*Similar performance but divergent spatial predictions*
+
+Despite very similar overall model performance (RMSE: 2.74–2.76; R²: ~0.60; CCC: ~0.75–0.76), no clear superiority of either algorithm can be identified. However, clear spatial discrepancies between models were evident, indicating that comparable global performance metrics do not necessarily translate into similar spatial predictions. The structured disagreement likely reflects differences in algorithmic learning strategy: Random Forest is an ensemble tree-based method capable of capturing complex nonlinear relationships [@breiman_random_2001], whereas Cubist combines rule-based partitioning with local linear regression models [@noi_comparison_2017].
+
+*Spatial structure of model disagreement, structural uncertainty and model sensitivity*
+
+Model disagreement was spatially widespread across Germany, indicating that differences between algorithms occurred throughout the study area. However, disagreement values were not evenly distributed but showed clear spatial clustering, with higher concentrations of Δ values in specific physiographic regions. These hotspots were particularly evident in forested and topographically complex landscapes, including parts of southern Germany such as the Bavarian Forest and Alpine forelands, as well as selected areas of the Central Uplands (e.g. Harz, Hunsrück) and northern lowlands (e.g. northeastern lake districts, northwestern Geest). In contrast, regions with lower predicted C:N values showed a more diffuse spatial pattern and less pronounced clustering of disagreement, for example in parts of the Swabian-Franconian Alb and the Oldenburg–East Frisian Geest.
+This spatial structuring suggests that model disagreement is not random but related to environmental gradients, particularly in geomorphologically complex and forest-dominated systems. While direct comparisons based on disagreement maps are rare, this pattern is consistent with findings from digital soil mapping studies showing that prediction uncertainty and model sensitivity tend to increase in heterogeneous landscapes, under high covariate variability and limited sample support [@nozari_digital_2024, @wadoux_machine_2020]. The magnitude of disagreement (|Δ|) further highlights regions of increased model sensitivity and can be interpreted as an indicator of model-dependent predictions, particularly where different algorithms respond differently to complex environmental conditions.
+This interpretation is supported by the spatial distribution of prediction uncertainty. Random Forest predictions were on average less uncertain (mean SD: 0.47 ± 0.27) than Cubist predictions (0.81 ± 0.57), indicating higher overall model stability. This pattern was consistent across all land-cover types, with lower uncertainty values for Random Forest in grassland (0.37 vs. 0.74), forest (0.64 vs. 1.14), cropland (0.31 vs. 0.47) and wetland systems (0.63 vs. 1.40). Similar tendencies have been reported in previous DSM studies, where Random Forest often showed more stable predictions compared to Cubist in mapping soil properties [@khaledian_selecting_2020, @nozari_digital_2024].
+
+Across both models, uncertainty was lowest in croplands and highest in forest and wetland systems, reinforcing the link between environmental heterogeneity and predictive uncertainty. Moderate correlations between absolute model differences and uncertainty (RF: r = 0.37; Cubist: r = 0.27) further suggest that disagreement and uncertainty are partly related.
+
+*Linking uncertainty to environmental complexity*
+
+This supports previous findings that predictive uncertainty in digital soil mapping is closely linked to the representativeness of the environmental feature space [@khosravani_soil_2026] (**Schmidinger** et al., 2023; Khosravani et al., 2026). In addition, extreme uncertainty values in the cubist predictions partly coincide with areas where random forest did not produce predictions due to missing data, highlighting differences in model robustness to data gaps.
+
+*Data-driven limitations (LUCAS sampling design)*
+
+A key limitation underlying both spatial patterns and uncertainty structures is the configuration of the LUCAS dataset, with a mean sampling distance of approximately 7–8 km, which constrains the representation of fine-scale heterogeneity, particularly in variable systems such as grasslands and peat-influenced environments [@hong_path_2026, @pouladi_mapping_2019].
+
+*Implications for DSM and future work*
+
+Overall, the results indicate that uncertainty should not be treated merely as a residual modelling artefact but as an informative component of spatial prediction. Areas of high uncertainty and strong model disagreement can serve as priority targets for improved sampling and model refinement, particularly in environmentally complex regions where current predictions are most constrained.
+
 
 # Conclusion
 
 // Fazit (kurz, prägnant, 3–6 Sätze)
 
 -   importance of accurate documentation and ideally sharing code for reproducibility
+
+# Contributions
+
+
+Nina Preußler
+
+- coding
+- Methods
+- Results
+
 
 # AI documentation
 
@@ -1029,7 +1111,10 @@ A controversial (?) and surprising choice by @khosravani_soil_2026 was to includ
 
 ## Coding
 
-- 
+- improve efficiency
+- improve and customize plots
+- restructure data and extract values
+
 
 # Appendix
 
@@ -1037,6 +1122,60 @@ A controversial (?) and surprising choice by @khosravani_soil_2026 was to includ
 
 ```{r}
 plot(predictor_stack)
+```
+
+```{r predictor-variable-ranges}
+
+num_layers <- which(!sapply(1:nlyr(predictor_stack), function(i) is.logical(values(predictor_stack[[i]])[1])))
+
+
+
+stats <- global(predictor_stack[[1:14]], fun = c("mean", "sd", "min", "max"), na.rm = TRUE)
+
+r_num <- predictor_stack[[1:14]]
+  
+# compute raster stats
+r_stats <- data.frame(
+  variable = names(r_num),
+  mean   = global(r_num, "mean", na.rm = TRUE)[,1],
+  median = global(r_num, median, na.rm = TRUE)[,1],
+  min    = global(r_num, "min", na.rm = TRUE)[,1],
+  max    = global(r_num, "max", na.rm = TRUE)[,1],
+  sd     = global(r_num, "sd", na.rm = TRUE)[,1]
+) %>%
+  mutate(source = "raster")
+
+# compute point stats
+pt_stats <- data %>%
+  select(all_of(names(r_num))) %>%
+  summarise(across(
+    all_of(names(r_num)),
+    list(
+      mean = ~mean(.x, na.rm = TRUE),
+      median = ~median(.x, na.rm = TRUE),
+      min = ~min(.x, na.rm = TRUE),
+      max = ~max(.x, na.rm = TRUE),
+      sd = ~sd(.x, na.rm = TRUE)
+    )
+  )) %>%
+  pivot_longer(
+    everything(),
+    names_to = c("variable", ".value"),
+    names_pattern = "(.+)_(mean|median|min|max|sd)"
+  ) %>%
+  mutate(source = "sampling_points")
+
+# combine in one df
+combined_stats <- bind_rows(r_stats, pt_stats) %>%
+  arrange(variable, source)
+
+knitr::kable(combined_stats, digits = 2)
+```
+
+```{r}
+ggplot(combined_stats, aes(source, ymin = min, ymax = max)) +
+    geom_linerange() +
+    facet_wrap(~variable, scales = "free_y")
 ```
 
 
@@ -1135,5 +1274,61 @@ corr_rasters_samp <- spatSample(corr_rasters, size = 1e4, method = "random", na.
 cor(corr_rasters_samp)
 
 ```
+
+## Observed vs. predicted distributions
+
+```{r}
+data_preds <-  terra::extract(c(rf_mean_map, cub_mean_map), lucas) %>%
+  cbind(data$cn_ratio)
+
+names(data_preds) <- c('ID', 'rf_mean', 'cub_mean', 'measured')
+
+data_long <- data_preds %>%
+  select(-ID) %>%
+  pivot_longer(cols = everything(),
+               names_to = "source",
+               values_to = "value")
+
+ggplot(data_long, aes(x = value, fill = source)) +
+  geom_density(alpha = 0.4) +
+  theme_minimal() +
+  labs(x = "C:N ratio", y = "Density")
+
+ggplot(data_long, aes(x = source, y = value, fill = source)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "white") +
+  theme_minimal() +
+  labs(x = "", y = "C:N ratio")
+```
+
+## Table 10-fold CV accuracies
+
+```{r}
+knitr::kable(accuracies, digits = 3)
+```
+
+```{r table-cn-range-comparison}
+
+labels <- c('Measured', 'RF predicted (sampling)', 'Cubist predicted (sampling)', 'RF predicted (complete)', 'Cubist predicted (complete)')
+
+mins <- c(min(data$cn_ratio), min(rf_preds$pred), min(cubist_preds$pred), min(values(rf_mean_map), na.rm = TRUE),  min(values(cub_mean_map), na.rm = TRUE))
+
+maxs <- c(max(data$cn_ratio), max(rf_preds$pred), max(cubist_preds$pred), max(values(rf_mean_map), na.rm = TRUE),  max(values(cub_mean_map), na.rm = TRUE))
+
+means <- c(mean(data$cn_ratio), mean(rf_preds$pred), mean(cubist_preds$pred), mean(values(rf_mean_map), na.rm = TRUE),  mean(values(cub_mean_map), na.rm = TRUE))
+
+sds <- c(sd(data$cn_ratio), sd(rf_preds$pred), sd(cubist_preds$pred), sd(values(rf_mean_map), na.rm = TRUE),  sd(values(cub_mean_map), na.rm = TRUE))
+
+cn_range_comp <- tibble(
+  Source = labels,
+  Minimum = mins,
+  Maximum = maxs,
+  Mean = means,
+  SD = sds
+)
+
+knitr::kable(cn_range_comp)
+```
+
 
 # References
