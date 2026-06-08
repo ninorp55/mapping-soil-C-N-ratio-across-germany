@@ -9,3 +9,7 @@ soil-N-project_files/
 renv/
 soil-N-project.Rproj
 .quarto/
+_freeze/
+report*
+/.quarto/
+**/*.quarto_ipynb

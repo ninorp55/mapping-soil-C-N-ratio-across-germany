@@ -1,0 +1,7 @@
+project:
+  type: default
+
+format:
+  pdf:
+    toc: false
+    include-before-body: before-body.tex
