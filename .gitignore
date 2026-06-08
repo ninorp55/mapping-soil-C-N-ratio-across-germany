@@ -10,6 +10,7 @@ renv/
 soil-N-project.Rproj
 .quarto/
 _freeze/
-report*
+*.pdf
+*.html
 /.quarto/
 **/*.quarto_ipynb
